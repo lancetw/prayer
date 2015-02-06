@@ -1,0 +1,59 @@
+<ion-view title="">
+  <ion-nav-buttons side="left">
+    <button class="button button-white button-clear no-animation"
+      ng-click="startApp()" ng-if="!slideIndex">
+      略過教學
+    </button>
+    <button class="button button-white button-clear no-animation"
+      ng-click="previous()" ng-if="slideIndex > 0">
+      上一步
+    </button>
+  </ion-nav-buttons>
+
+  <ion-nav-buttons side="right">
+    <button class="button button-white button-clear no-animation"
+      ng-click="next()" ng-if="slideIndex != 2">
+      下一步
+    </button>
+    <!--<button class="button button-white button-clear no-animation"
+      ng-click="startApp()" ng-if="slideIndex == 2">
+      開始使用
+    </button>-->
+  </ion-nav-buttons>
+
+  <ion-slide-box on-slide-changed="slideChanged(index)">
+    <ion-slide>
+      <h3>歡迎使用一領一禱告認領</h3>
+      <div id="logo">
+        <i class="icon svgicon-prayer"></i>
+      </div>
+      <p>
+        服務目前開放測試
+      </p>
+      <p>
+        有任何問題請聯絡 lancetw@gmail.com
+      </p>
+
+      <button ng-click="toMain()" class="button button-stable">我已經是守望者</button>
+    </ion-slide>
+
+    <ion-slide>
+      <h3>成為守望者</h3>
+      <div id="list">
+        <h5>只要簡單幾個步驟</h5>
+        <ol>
+          <li>指定您的教會</li>
+          <li>輸入想禱告對象與禱告頻率</li>
+          <li>輸入您的 Email</li>
+        </ol>
+      </div>
+    </ion-slide>
+
+    <ion-slide>
+      <h3>現在就成為守望者</h3>
+      <br/>
+      <button class="button button-dark" ng-click="startApp()">開始使用一領一禱告認領</ion-option-button>
+    </ion-slide>
+  </ion-slide-box>
+
+</ion-view>

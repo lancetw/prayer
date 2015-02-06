@@ -1,0 +1,35 @@
+<ion-modal-view>
+  <ion-header-bar>
+    <h1 class="title">認領代禱對象</h1>
+  </ion-header-bar>
+  <ion-content>
+    <form>
+    <ion-item ng-if="map.item.oid" class="item-stable text-center">
+      <h2>{{map.item.ocname}}</h2>
+      <p>{{map.item.address}}</p>
+    </ion-item>
+
+    <div class="list list-inset">
+      <label class="item item-input">
+        <span class="input-label">代禱對象</span>
+        <input ng-model="mtarget.name" type="text" placeholder="無名氏">
+      </label>
+
+      <ion-toggle ng-model="mtarget.sinner">已決志</ion-toggle>
+
+      <label class="item item-input item-select">
+        <div class="input-label">
+          理想代禱頻率
+        </div>
+        <select ng-model="mtarget.freq" ng-options="f.val as f.name for f in mtarget.freqs" ng-change="freqChanged()">
+          <option value="">請選擇</option>
+        </select>
+      </label>
+
+      <button ng-disabled="!(!!mtarget.name)" ng-click="createMtarget()" class="button button-dark button-block">確定</button>
+      <button ng-click="closeMtargetModal()" class="button button-light button-block">取消</button>
+    </div>
+    </form>
+  </ion-content>
+
+</ion-modal-view>

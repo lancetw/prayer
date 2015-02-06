@@ -1,0 +1,35 @@
+<ion-view cache-view="false" hide-back-button="false" title="一領一禱告認領">
+  <ion-nav-buttons side="right"></ion-nav-buttons>
+  <ion-content padding="true">
+    <form>
+    <ion-item ng-if="map.item.ocname && block.church" class="item-light text-center">
+      <h2>{{map.item.ocname}}</h2>
+      <p>{{map.item.address}}</p>
+    </ion-item>
+
+    <ion-item ng-if="block.mtarget" class="text-center item-light">
+      代禱對象：{{mtarget.name}}
+    </ion-item>
+
+    <div ng-if="block.user" class="list">
+      <label class="item item-input">
+        <span class="input-label">您的 Email</span>
+        <input ng-model="user.email" type="email" placeholder="user@ccea.org.tw">
+      </label>
+
+      <ion-toggle ng-model="user.subscription">訂閱電子報</ion-toggle>
+
+      <br />
+
+      <!--<ion-checkbox ng-model="userAgreed" ng-true-value="1" ng-false-value="0">
+        我同意使用者條款
+      </ion-checkbox>-->
+
+      <button ng-disabled="!(!!user.email)" ng-click="register()" class="button button-dark button-block">開始使用</button>
+
+      <button ng-click="toIntro()" class="button button-light button-block">取消</button>
+    </div>
+    </form>
+
+  </ion-content>
+</ion-view>

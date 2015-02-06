@@ -1,0 +1,38 @@
+<ion-view hide-back-button="true" title="教會名稱輸入系統">
+  <ion-nav-buttons side="right"></ion-nav-buttons>
+  <ion-content>
+
+    <div class="list card">
+      <div class="item item-divider">選擇您的所在地</div>
+      <div class="item item-body">
+        <form ng-controller="TWZipCodeCtrl" ng-submit="regionSubmit()">
+        <div class="item item-input item-select">
+          <div class="input-label">
+            縣市
+          </div>
+          <select ng-model="twzipcode.citySel" ng-options="citys for (citys, region) in twZipCodeData">
+            <option value="">請選擇</option>
+          </select>
+        </div>
+        <div class="item item-input item-select">
+          <div class="input-label">
+            鄉鎮市區
+          </div>
+          <select ng-model="twzipcode.regionSel" ng-options="regions for (regions, zipcode) in twzipcode.citySel">
+            <option value="">請選擇</option>
+          </select>
+        </div>
+        <input class="button button-block button-positive" type="submit" id="submit" value="查詢" />
+      </form>
+      </div>
+    </div>
+
+    <div class="list list-inset">
+      <button class="button button-block button-dark" ng-click="toLocation()">
+      或是使用 GPS 找尋我的教會
+      </button>
+    </div>
+
+  </ion-content>
+</ion-view>
+

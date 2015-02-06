@@ -1,0 +1,35 @@
+
+<!--
+  Create tabs with an icon and label, using the tabs-positive style.
+  Each tab's child <ion-nav-view> directive will have its own
+  navigation history that also transitions its views in and out.
+-->
+<ion-tabs ng-controller="TabCtrl" class="tabs-icon-top tabs-background-dark tabs-color-light">
+
+  <!-- Tab -->
+  <ion-tab badge="badges.prayer" badge-style="badge-assertive" title="禱告" icon="svgicon-prayer" href="#/tab/prayer">
+    <ion-nav-view name="tab-prayer"></ion-nav-view>
+  </ion-tab>
+
+  <!-- Tab -->
+  <ion-tab badge="badges.missions" badge-style="badge-assertive" title="任務" icon="svgicon-mission" href="#/tab/missions">
+    <ion-nav-view name="tab-missions"></ion-nav-view>
+  </ion-tab>
+
+  <!-- Tab -->
+  <ion-tab badge="badges.resources" badge-style="badge-assertive" title="資源" icon="svgicon-resource" href="#/tab/resources">
+    <ion-nav-view name="tab-resources"></ion-nav-view>
+  </ion-tab>
+
+  <!-- Tab -->
+  <ion-tab title="成果" icon="svgicon-reward" href="#/tab/rewards">
+    <ion-nav-view name="tab-rewards"></ion-nav-view>
+  </ion-tab>
+
+  <!-- Tab -->
+  <ion-tab title="關於" icon="icon svgicon-about" href="#/tab/about">
+    <ion-nav-view name="tab-about"></ion-nav-view>
+  </ion-tab>
+
+
+</ion-tabs>

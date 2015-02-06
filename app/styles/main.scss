@@ -1,0 +1,89 @@
+@import 'colors';
+@import '../lib/icomoon/style.css';
+
+a.title {
+  text-decoration: none;
+}
+
+.button.button-balanced.prayer {
+  border-width: 0;
+  border-radius: 50%;
+  max-width: 48px;
+  max-height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+
+  .icon:before {
+    font-size: 30px;
+  }
+}
+
+.bar-footer.mtarget {
+  height: 48px;
+
+  .title {
+    line-height: 48px;
+  }
+}
+
+input[type="text"].itemInput {
+  font-size: 100%;
+}
+
+.loading i.icon.ion-ios7-reloading {
+  font-size: 71px !important;
+  text-align: center;
+}
+
+.bar-dark.bar-fix {
+  border-bottom-color: transparent !important;
+  background-image: none;
+}
+
+.float-left {
+  float: left !important;
+}
+
+.float-right {
+  float: right !important;
+
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.slider {
+  height: 100%;
+
+  .slider-slide {
+    padding-top: 80px;
+    color: #000;
+    background-color: #fff;
+    text-align: center;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-weight: 300;
+  }
+}
+
+#logo {
+  margin: 30px 0px;
+  font-size: 128px;
+  color: $balanced;
+}
+
+#list {
+  width: 220px;
+  margin: 30px auto;
+  font-size: 20px;
+
+  ol {
+    margin-top: 30px;
+
+    li {
+      text-align: left;
+      list-style: decimal;
+      margin: 10px 0px;
+    }
+  }
+}

@@ -1,0 +1,59 @@
+<ion-view title="一領一禱告認領">
+  <ion-nav-buttons side="left">
+    <button class="button button-clear button-white icon ion-ios7-gear" ng-click="showDelete()"></button>
+  </ion-nav-buttons>
+  <ion-nav-buttons side="right">
+    <button class="button button-clear button-white icon ion-plus" ng-click="openMtargetModal()"></button>
+  </ion-nav-buttons>
+  <ion-content on-tap="data.showReorder = false">
+    <ion-refresher pulling-text="往下拉可更新資料" on-refresh="doRefresh()">
+    </ion-refresher>
+
+    <div class="item item-divider text-center" ng-click="toogleChurchPanel()">
+      {{church.name}}
+    </div>
+    <div class="button-bar" ng-model="churchPanelState" ng-show="churchPanelState">
+      <button class="button button-clear button-positive" ng-click="">修改資料</button>
+      <button class="button button-clear button-positive" ng-click="">統計資訊</button>
+      <button class="button button-clear button-positive" ng-click="">回報錯誤</button>
+    </div>
+
+    <div class="item text-center" ng-hide="mtargets.length !== 0">
+      目前沒有認領的對象
+    </div>
+
+    <ion-list on-hold="data.showReorder = !data.showReorder; data.showDelete = false" show-reorder="data.showReorder" show-delete="false">
+      <ion-item item="mtarget" class="item-icon-right item-remove-animate" ng-repeat="mtarget in mtargets track by $index" href="#/tab/prayer/{{mtarget.id}}">
+
+        <i class="icon ion-chevron-right icon-accessory"></i>
+
+        <div class="row">
+
+          <div class="col-25">
+            <button class="button button-balanced prayer" ng-if="mtarget.status" ng-click="prayClick(mtarget.id, $event)">
+              <i class="icon svgicon-prayer"></i>
+            </button>
+            <button class="button button-balanced prayer disabled" ng-if="!mtarget.status">
+              <i class="icon svgicon-prayer"></i>
+            </button>
+          </div>
+          <div class="col-75">
+          <h2>{{mtarget.name}}</h2>
+            <p ng-class="hidden" ng-if="mtarget.keep > 1 && mtarget.keep <= 60000">已點擊代禱</p>
+            <p ng-class="hidden" ng-if="mtarget.keep > 60000">距離上次代禱已經過<span am-time-ago="mtarget.past" am-without-suffix="true"></span></p>
+            <p ng-class="hidden" ng-if="mtarget.keep == 0">尚未開始代禱</p>
+          </div>
+        </div>
+
+        <ion-delete-button class="ion-minus-circled" ng-click="mtargets.splice($index, 1); removeMtarget(mtarget.id)">
+        </ion-delete-button>
+
+        <ion-reorder-button class="ion-navicon" on-reorder="moveItem(mtarget, $fromIndex, $toIndex)">
+        </ion-reorder-button>
+
+      </ion-item>
+
+    </ion-list>
+
+  </ion-content>
+</ion-view>

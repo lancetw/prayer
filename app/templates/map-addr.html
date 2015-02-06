@@ -1,0 +1,22 @@
+<div class="modal">
+  <ion-header-bar class="bar-dark">
+    <h1 class="title">教會名稱輸入系統</h1>
+    <button class="button button-dark" ng-click="closeModal()">關閉</button>
+  </ion-header-bar>
+  <ion-content>
+    <ion-list>
+      <ion-item ng-click="toMtarget(item)" ng-repeat="item in map.items">
+      <h3>{{item.ocname}}</h3>
+      <p>{{item.address}}</p>
+      </ion-item>
+    </ion-list>
+
+  </ion-content>
+
+  <ion-footer-bar class="range bar-dark">
+    <button ng-click="toMtarget()" class="button button-block button-positive">
+      找不到教會？
+    </button>
+  </ion-footer-bar>
+
+</div>

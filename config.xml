@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<widget id="tw.org.ccea.Prayer" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>Prayer</name>
+  <description>
+    實用的禱告認領 APP
+  </description>
+  <author email="lancetw@gmail.com" href="http://www.ccea.org.tw">
+    中華基督教福音協進會（製作：Hsin-lin Cheng aka lancetw）
+  </author>
+  <content src="index.html"/>
+  <access origin="*"/>
+</widget>
