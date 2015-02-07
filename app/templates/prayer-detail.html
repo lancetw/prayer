@@ -1,18 +1,17 @@
 <ion-view cache-view="false" hide-back-button="true" title="詳細狀況">
 
-  <ion-header-bar align-title="center" ng-if="mtarget.meeter && mtarget.baptized" class="bar-positive bar-subheader">
-    <span class="title" href="#">代禱任務完成！ ^_^</span>
-  </ion-header-bar>
-
-  <ion-header-bar align-title="center" ng-if="!(mtarget.meeter && mtarget.baptized)" class="bar-stable bar-subheader">
-    <span class="title" href="#">代禱任務進度</span>
-  </ion-header-bar>
-
   <form ng-submit="saveMtarget()">
 
-  <ion-content class="padding-top" padding="true">
+  <ion-content class="has-subheader subheader-fix">
 
-    <br />
+    <div ng-if="mtarget.meeter && mtarget.baptized" class="bar bar-subheader bar-positive subheader-fix">
+      <span class="title  padding-bottom" href="#">代禱任務完成！ ^_^</span>
+    </div>
+
+    <div ng-if="!(mtarget.meeter && mtarget.baptized)" class="bar bar-subheader bar-stable subheader-fix">
+      <span class="title  padding-bottom" href="#">代禱任務進度</span>
+    </div>
+
     <div class="list card">
 
       <a event-focus="click" event-focus-id="inputMtargetName" ng-show="!!showModifyMtargetName === false" class="item-enter item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
@@ -52,8 +51,8 @@
     </div>
 
   </ion-content>
-  <ion-footer-bar ng-hide="!(!!mtarget.name)" align-title="center" class="bar-light mtarget">
-    <button type="submit" class="button button-clear title" href="#">回到列表</button>
+  <ion-footer-bar ng-hide="!(!!mtarget.name)" class="bar mtarget">
+    <button type="submit" class="button button-clear button-full" href="#">回到列表</button>
   </ion-footer-bar>
   </form>
 

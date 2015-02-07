@@ -1,15 +1,26 @@
 @import 'colors';
 @import '../lib/icomoon/style.css';
 
-a.title {
-  text-decoration: none;
-}
-
 .item-enter.ng-animate {
   transition:0s none;
   -webkit-transition:0s none;
   animation: 0s none;
   -webkit-animation: 0s none;
+}
+
+.has-header.has-subheader.subheader-fix {
+  top: 43px;
+  .scroll {
+    margin-top: 58px;
+  }
+}
+
+.has-header.has-subheader.has-tabs-top.subheader-fix {
+  top: 93px;
+}
+
+.bar-subheader.subheader-fix {
+  top: -58px;
 }
 
 .button.button-balanced.prayer {
@@ -26,11 +37,7 @@ a.title {
 }
 
 .bar-footer.mtarget {
-  height: 48px;
-
-  .title {
-    line-height: 48px;
-  }
+  height: 60px;
 }
 
 input[type="text"].itemInput {
