@@ -302,7 +302,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, UserAction) {
+.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, LoadingService, UserAction) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -362,6 +362,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       email: $scope.user.email,
       uuidx: $scope.device.uuid
     };
+
+    LoadingService.loading();
 
     UserAction.setAuth($scope.auth);
 
@@ -538,7 +540,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       item.past = new Date();
 
       MtargetsService.update($scope.mtargets);
-      NotifyService.run(item.id, item.freq, item.name);
+      NotifyService.run(item);
       LoadingService.done();
     }, function (err) {
       LoadingService.log(err);
@@ -653,10 +655,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicPlatform.ready(function () {
     $scope.init()
     .then(function () {
-      return $scope.prepareTargets();
-    })
-    .then(function () {
-      return $scope.church();
+      $scope.church();
+      $scope.prepareTargets();
     });
   });
 
