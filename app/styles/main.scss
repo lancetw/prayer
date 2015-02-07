@@ -5,6 +5,13 @@ a.title {
   text-decoration: none;
 }
 
+.item-enter.ng-animate {
+  transition:0s none;
+  -webkit-transition:0s none;
+  animation: 0s none;
+  -webkit-animation: 0s none;
+}
+
 .button.button-balanced.prayer {
   border-width: 0;
   border-radius: 50%;

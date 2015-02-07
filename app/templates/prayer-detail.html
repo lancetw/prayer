@@ -8,18 +8,20 @@
     <span class="title" href="#">代禱任務進度</span>
   </ion-header-bar>
 
+  <form ng-submit="saveMtarget()">
+
   <ion-content class="padding-top" padding="true">
-    <form>
+
     <br />
     <div class="list card">
 
-      <a event-focus="click" event-focus-id="inputMtargetName" ng-hide="showModifyMtargetName" href="#" class="item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
+      <a event-focus="click" event-focus-id="inputMtargetName" ng-show="!!showModifyMtargetName === false" class="item-enter item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
         <i class="icon ion-person-add"></i>
         <span>{{ mtarget.name }}</span>
       </a>
 
-      <div ng-show="showModifyMtargetName" class="item item-icon-left">
-        <i class="icon "></i>
+      <div ng-show="!!showModifyMtargetName === true" class="item-enter item item-icon-left">
+        <i class="icon ion-person-add"></i>
         <input id="inputMtargetName" type="text" class="itemInput" placeholder="輸入新的名稱" ng-model="mtarget.name" ng-blur="showModifyMtargetName = false">
       </div>
 
@@ -49,12 +51,11 @@
 
     </div>
 
-    </form>
   </ion-content>
-  <ion-footer-bar ng-hide="!(!!mtarget.name)" align-title="center" class="bar-light mtarget" ng-click="saveMtarget()">
-    <a class="title" href="#">回到列表</a>
+  <ion-footer-bar ng-hide="!(!!mtarget.name)" align-title="center" class="bar-light mtarget">
+    <button type="submit" class="button button-clear title" href="#">回到列表</button>
   </ion-footer-bar>
-
+  </form>
 
 
 </ion-view>
