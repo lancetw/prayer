@@ -2,13 +2,13 @@
 
   <form ng-submit="saveMtarget()">
 
-  <ion-content class="has-subheader subheader-fix">
+  <ion-content>
 
-    <div ng-if="mtarget.meeter && mtarget.baptized" class="bar bar-subheader bar-positive subheader-fix">
+    <div ng-if="mtarget.meeter && mtarget.baptized" class="item item-divider text-center item-balanced">
       <span class="title  padding-bottom" href="#">代禱任務完成！ ^_^</span>
     </div>
 
-    <div ng-if="!(mtarget.meeter && mtarget.baptized)" class="bar bar-subheader bar-stable subheader-fix">
+    <div ng-if="!(mtarget.meeter && mtarget.baptized)" class="item item-divider text-center item-light">
       <span class="title  padding-bottom" href="#">代禱任務進度</span>
     </div>
 

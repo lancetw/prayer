@@ -94,12 +94,15 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('AddressCtrl', function ($scope, $state, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService) {
+.controller('AddressCtrl', function ($scope, $state, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService, KeyboardService) {
 
   $scope.init = function () {
+
     var q = $q.defer();
 
     try {
+      KeyboardService.showAccessoryBar();
+
       $scope.map = {};
 
       $ionicModal.fromTemplateUrl('templates/map-addr.html', function ($ionicModal) {
@@ -160,12 +163,14 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('MapCtrl', function ($scope, $state, $ionicPlatform, $log, $timeout, $q, $ionicNavBarDelegate, $ionicScrollDelegate, MapService, LoadingService, ConfigService) {
+.controller('MapCtrl', function ($scope, $state, $ionicPlatform, $log, $timeout, $q, $ionicNavBarDelegate, $ionicScrollDelegate, MapService, LoadingService, ConfigService, KeyboardService) {
 
   $scope.init = function () {
     var q = $q.defer();
 
     try {
+
+      KeyboardService.hideAccessoryBar();
 
       LoadingService.loading();
 
@@ -297,7 +302,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, ConfigService, DeviceService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, LoadingService, NotifyService, KeyboardService) {
+.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, UserAction) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -326,7 +331,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         $scope.block.mtarget = true;
       }
 
-      q.resolve($scope.mtarget);
+      q.resolve();
 
     } catch (err) {
       q.reject(err);
@@ -358,129 +363,39 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       uuidx: $scope.device.uuid
     };
 
-    if ($scope.block.church && $scope.block.mtarget) {
-      $scope.User()
-      .then($scope.Setting())
-      .then($scope.Church())
-      .then($scope.Mtarget())
+    UserAction.setAuth($scope.auth);
+
+    if ($scope.map && $scope.map.item.ocname && $scope.mtarget.name) {
+      UserAction.addUser($scope.user)
       .then(function () {
-        ConfigService.setAuth($scope.auth);
-        NotifyService.run($scope.mtarget.id, $scope.mtarget.freq, $scope.mtarget.name);
-        MtargetsService.clean();
-        $state.go('tab.prayer-index');
+        return UserAction.setting($scope.user);
+      })
+      .then(function () {
+        return UserAction.joinChurch($scope.map);
+      })
+      .then(function () {
+        return UserAction.addMtarget($scope.mtarget, true);
+      })
+      .then(function () {
+        NotifyService.run($scope.mtarget);
+        $scope.Login();
       });
 
     } else {
-      $scope.UserCheck()
-      .then($scope.Setting)
+      UserAction.checkUser($scope.user)
       .then(function () {
-        ConfigService.setAuth($scope.auth);
-        MtargetsService.clean();
-        $state.go('tab.prayer-index');
+        return UserAction.setting($scope.user);
+      })
+      .then(function () {
+        $scope.Login();
       });
     }
   };
 
-  $scope.User = function () {
-    var q = $q.defer();
-    var user = new UsersService();
-    user.email = $scope.user.email;
-    user.uuidx = $scope.device.uuid;
-    user.$save().then(function () {
-      return q.resolve();
-    }, function (err) {
-      LoadingService.error('無法新增，請重試一次');
-      q.reject(err);
-    });
-
-    return q.promise;
-  };
-
-  $scope.UserCheck = function () {
-    var q = $q.defer();
-    var drv = UserCheckService.init($scope.auth);
-
-    LoadingService.loading();
-    drv.get().$promise.then(function () {
-      return q.resolve();
-    }, function (err) {
-      LoadingService.error('無法登入，請重試一次');
-      q.reject(err);
-    });
-
-    return q.promise;
-  };
-
-  $scope.Setting = function () {
-    var q = $q.defer();
-    var settingData = {
-      email: $scope.user.email,
-      subscription: $scope.user.subscription
-    };
-    var drv = SettingsService.init($scope.auth);
-
-    drv.save(settingData)
-    .$promise.then(function () {
-      $scope.block.user = false;
-      return q.resolve();
-    }, function (err) {
-      q.reject(err);
-    });
-
-    return q.promise;
-  };
-
-  $scope.Church = function () {
-    var q = $q.defer();
-    var settingData = {
-      name: $scope.map.item.ocname,
-      lng: $scope.map.item.lng,
-      lat: $scope.map.item.lat,
-      cid: $scope.map.item.oid
-    };
-    var drv = ChurchesService.init($scope.auth);
-
-    drv.save(settingData)
-    .$promise.then(function () {
-      $scope.block.church = false;
-
-      return q.resolve();
-    }, function (err) {
-      q.reject(err);
-    });
-
-    return q.promise;
-  };
-
-  $scope.Mtarget = function () {
-    var q = $q.defer();
-    var settingData = {
-      name: $scope.mtarget.name,
-      mask: (function () {
-        if ($scope.mtarget.name.length > 2) {
-          return $scope.mtarget.name[0] + '★' + $scope.mtarget.name.slice(-1);
-        } else {
-          return $scope.mtarget.name[0] + '★';
-        }
-      }()),
-      freq: $scope.mtarget.freq,
-      sinner: $scope.mtarget.sinner
-    };
-    var drv = MtargetsService.init($scope.auth);
-
-    drv.save(settingData)
-    .$promise.then(function () {
-      $scope.block.mtarget = false;
-      q.resolve();
-    }, function (err) {
-      if (err.status === '302') {  // handle 302
-        $scope.block.mtarget = false;
-        q.resolve();
-      } else {
-        q.reject(err);
-      }
-    });
-    return q.promise;
+  $scope.Login = function () {
+    ConfigService.setAuth($scope.auth);
+    MtargetsService.clean();
+    $state.go('tab.prayer-index');
   };
 
   $scope.toIntro = function () {
@@ -488,15 +403,16 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $ionicPlatform.ready(function () {
-    $scope.init().then($scope.Device());
+    $scope.init().then(function () {
+      $scope.Device();
+    });
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $interval, MtargetsService, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
 
   $scope.init = function () {
     var q = $q.defer();
-
     try {
       $ionicNavBarDelegate.showBackButton(false);
 
@@ -565,11 +481,28 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     KeyboardService.close();
 
     LoadingService.loading();
-    $scope.Mtarget().then(function () {
+    UserAction.setAuth($scope.auth);
+    UserAction.addMtarget($scope.mtarget).then(function (data) {
+      $scope.mtarget = data;
+      $scope.mtarget.status = true;
+      $scope.mtarget.past = 0;
+      $scope.mtarget.keep = 0;
+      $scope.mtarget.baptized = 0;
+      $scope.mtarget.meeter = 0;
+      $scope.mtargets.unshift($scope.mtarget);
+      $scope.tracking($scope.mtarget);
+
+      LoadingService.msg('新增完成');
+      $scope.closeMtargetModal();
       MtargetsService.update($scope.mtargets);
       LoadingService.done();
-    }, function () {
-      LoadingService.error('無法連線，請重試...');
+
+    }, function (err) {
+      if (+err.status === 302) {
+        LoadingService.error('重複的禱告對象');
+      } else {
+        LoadingService.error('無法新增對象，請重試一次');
+      }
     });
   };
 
@@ -589,45 +522,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       NotifyService.cancel(tid);
     }, function (err) {
       LoadingService.log(err);
-    });
-  };
-
-  $scope.Mtarget = function () {
-    var settingData = {
-      name: $scope.mtarget.name,
-      mask: (function () {
-        if ($scope.mtarget.name.length > 2) {
-          return $scope.mtarget.name[0] + '★' + $scope.mtarget.name.slice(-1);
-        } else {
-          return $scope.mtarget.name[0] + '★';
-        }
-      }()),
-      freq: $scope.mtarget.freq,
-      sinner: $scope.mtarget.sinner
-    };
-
-    var drv = MtargetsService.init($scope.auth);
-
-    return drv.save(settingData)
-    .$promise.then(function (resp) {
-      $scope.mtarget = resp.data;
-      $scope.mtarget.status = true;
-      $scope.mtarget.past = 0;
-      $scope.mtarget.keep = 0;
-      $scope.mtarget.baptized = 0;
-      $scope.mtarget.meeter = 0;
-      $scope.mtargets.unshift($scope.mtarget);
-      $scope.tracking($scope.mtarget);
-
-      LoadingService.msg('新增完成');
-      $scope.closeMtargetModal();
-
-    }, function (err) {
-      if (err.status === '302') {
-        LoadingService.error('重複的禱告對象');
-      } else {
-        LoadingService.log();
-      }
     });
   };
 
@@ -758,13 +652,17 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $ionicPlatform.ready(function () {
     $scope.init()
-    .then($scope.prepareTargets())
-    .then($scope.church());
+    .then(function () {
+      return $scope.prepareTargets();
+    })
+    .then(function () {
+      return $scope.church();
+    });
   });
 
 })
 
-.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, KeyboardService, focus) {
+.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, KeyboardService, UserAction, focus) {
 
   $scope.init = function () {
     focus();
@@ -788,33 +686,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     KeyboardService.close();
 
-    var settingData = {
-      id: $scope.mtarget.id,
-      name: $scope.mtarget.name,
-      mask: (function () {
-        if ($scope.mtarget.name.length > 2) {
-          return $scope.mtarget.name[0] + '★' + $scope.mtarget.name.slice(-1);
-        } else {
-          return $scope.mtarget.name[0] + '★';
-        }
-      }()),
-      freq: $scope.mtarget.freq,
-      sinner: $scope.mtarget.sinner,
-      baptized: $scope.mtarget.baptized,
-      meeter: $scope.mtarget.meeter
-    };
-    var drv = MtargetsService.init($scope.auth);
-
-    LoadingService.loading();
-
-    drv.update(settingData)
-    .$promise.then(function () {}, function (err) {
-      if (err.status === '302') {  // handle 302
-      } else {
-        LoadingService.log(err);
-      }
-
-    }).then(function () {
+    UserAction.setAuth($scope.auth);
+    UserAction.updateMtarget($scope.mtarget)
+    .then(function () {
       $state.go('tab.prayer-index');
     });
   };

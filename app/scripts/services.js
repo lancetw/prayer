@@ -53,7 +53,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('LoadingService', function ($rootScope, $ionicLoading, $timeout) {
+.factory('LoadingService', function ($rootScope, $ionicLoading, $timeout, $log) {
   return {
     loading: function (duration) {
       //duration = (typeof duration === 'undefined') ? '1000' : duration;
@@ -90,7 +90,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         hideOnStateChange: true
       });
     },
-    log: function () {
+    log: function (err) {
+      $log.warn(err);
       // TODO 記錄到伺服器
       $ionicLoading.show({
         template: '發生錯誤，請重試',
@@ -121,30 +122,178 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
+.factory('UserAction', function ($ionicPlatform, $q, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService) {
+  var auth = {};
+
+  return {
+    setAuth: function (auth_) {
+      auth = auth_;
+    },
+    addUser: function (user_) {
+      var q = $q.defer();
+      var user = new UsersService();
+      user.email = user_.email;
+      user.uuidx = auth.uuidx;
+      user.$save().then(function (data) {
+        if (data.email === user_.email) {
+          return q.resolve(data);
+        } else {
+          return q.reject(data);
+        }
+      }, function (err) {
+        if (+err.status === 403) {
+          LoadingService.error('已經有此使用者，但無法在此裝置上使用。');
+        } else {
+          LoadingService.error('發生錯誤，錯誤碼為 ' + err.status);
+        }
+        q.reject(err);
+      });
+
+      return q.promise;
+    },
+    checkUser: function (user_) {
+      var q = $q.defer();
+      var drv = UserCheckService.init(auth);
+      LoadingService.loading();
+      drv.get().$promise.then(function (data) {
+        if (data.email === user_.email) {
+          q.resolve(data);
+        } else {
+          q.reject(data);
+        }
+      }, function (err) {
+        LoadingService.error('無法登入，請重試一次');
+        q.reject(err);
+      });
+
+      return q.promise;
+    },
+    setting: function (user_) {
+      var q = $q.defer();
+      var settingData = {
+        email: user_.email,
+        subscription: user_.subscription
+      };
+
+      var drv = SettingsService.init(auth);
+      drv.save(settingData)
+      .$promise.then(function (data) {
+        q.resolve(data);
+      }, function (err) {
+        LoadingService.error('無法新增設定，請重試一次');
+        q.reject(err);
+      });
+
+      return q.promise;
+    },
+    joinChurch: function (map_) {
+      var q = $q.defer();
+      var settingData = {
+        name: map_.item.ocname,
+        lng: map_.item.lng,
+        lat: map_.item.lat,
+        cid: map_.item.oid
+      };
+      var drv = ChurchesService.init(auth);
+      drv.save(settingData)
+      .$promise.then(function (data) {
+        q.resolve(data);
+      }, function (err) {
+        LoadingService.error('無法新增教會，請重試一次');
+        q.reject(err);
+      });
+
+      return q.promise;
+    },
+    addMtarget: function (mtarget_, skip) {
+      var q = $q.defer();
+      var settingData = {
+        name: mtarget_.name,
+        mask: (function () {
+          if (mtarget_.name.length > 2) {
+            return mtarget_.name[0] + '★' + mtarget_.name.slice(-1);
+          } else {
+            return mtarget_.name[0] + '★';
+          }
+        }()),
+        freq: mtarget_.freq,
+        sinner: mtarget_.sinner
+      };
+      var drv = MtargetsService.init(auth);
+
+      drv.save(settingData)
+      .$promise.then(function (data) {
+        q.resolve(data);
+      }, function (err) {
+        if (+err.status === 302) {
+          LoadingService.error('重複的禱告對象');
+          if (skip) {
+            q.resolve(err);
+          } else {
+            q.reject(err);
+          }
+        } else {
+          LoadingService.error('無法新增對象，請重試一次');
+          q.reject(err);
+        }
+      });
+
+      return q.promise;
+    },
+    updateMtarget: function (mtarget_) {
+      var q = $q.defer();
+      var settingData = {
+        id: mtarget_.id,
+        name: mtarget_.name,
+        mask: (function () {
+          if (mtarget_.name.length > 2) {
+            return mtarget_.name[0] + '★' + mtarget_.name.slice(-1);
+          } else {
+            return mtarget_.name[0] + '★';
+          }
+        }()),
+        freq: mtarget_.freq,
+        sinner: mtarget_.sinner,
+        baptized: mtarget_.baptized,
+        meeter: mtarget_.meeter
+      };
+      var drv = MtargetsService.init(auth);
+
+      LoadingService.loading();
+
+      drv.update(settingData)
+      .$promise.then(function (data) {
+        q.resolve(data);
+      }, function (err) {
+        q.reject(err);
+      });
+
+      return q.promise;
+    }
+  };
+})
+
+
 .factory('NotifyService', function ($ionicPlatform, $q, $cordovaLocalNotification) {
   var badges = 0;
 
   return {
-    runTest: function (tid, freq, name) {
-      return this.run(tid, 10000, name);
-
-    },
-    run: function (tid, freq, name) {
-      if (freq <= 0) {
-        return this.cancel(tid);
+    run: function (mtarget_) {
+      if (mtarget_.freq <= 0) {
+        return this.cancel(mtarget_.tid);
       }
 
       var now = new Date().getTime();
       var title = '一領一禱告認領';
-      var message = '你已經有' + (freq / (60*60*24)) + '天沒有為' + name + '禱告囉！';
+      var message = '你已經有' + (mtarget_.freq / (60*60*24)) + '天沒有為' + mtarget_.name + '禱告囉！';
 
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           badges = badges + 1;
 
           $cordovaLocalNotification.add({
-            id:         tid,
-            date:       new Date(now + freq*1000).getTime(),
+            id:         mtarget_.tid,
+            date:       new Date(now + mtarget_.freq*1000).getTime(),
             message:    message,
             title:      title,
             badge:      badges
@@ -161,14 +310,12 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       } catch (err) {}
     },
     purge: function () {
-
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           badges = 0;
           $cordovaLocalNotification.cancelAll();
         });
       } catch (err) {}
-
     },
     init: function () {
       try {
@@ -234,21 +381,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('UsersService', function ($resource, $q, ENV) {
-  var handleError = function (err) {
-    return $q.reject(err);
-  };
-
+.factory('UsersService', function ($resource, ENV) {
   return $resource(ENV.apiEndpoint + 'users', {}, {
-    'save': {method: 'POST', timeout: timeout_, headers: {}, interceptor: {
-      response: function (response) {
-        if (response.data.error) {
-          return handleError(response);
-        }
-        return response;
-      },
-      responseError: handleError
-    }}
+    'save': {method: 'POST', timeout: timeout_, headers: {}}
   });
 })
 
@@ -293,24 +428,13 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('MtargetsService', function ($resource, $q, $log, ENV, localStorageService, base64, _, ConfigService) {
-  var handleError = function (err) {
-    return $q.reject(err);
-  };
 
   var items = {};
   return {
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
       return $resource(ENV.apiEndpoint + 'targets/:id', {id: '@id'},
-        {'save': { method: 'POST', timeout: timeout_, headers: auth || {}, interceptor: {
-          response: function (response) {
-            if (response.data.error) {
-              return handleError(response);
-            }
-            return response;
-          },
-          responseError: handleError
-        }},
+        {'save': { method: 'POST', timeout: timeout_, headers: auth || {}},
          'query': { method: 'GET', isArray: true, timeout: timeout_, headers: auth || {} },
          'get': { method: 'GET', timeout: timeout_, headers: auth || {} },
          'update': { method: 'PUT', timeout: timeout_, headers: auth || {}},
@@ -383,6 +507,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     close: function () {
       if(window.cordova && window.cordova.plugins.Keyboard) {
         $cordovaKeyboard.close();
+      }
+    },
+    showAccessoryBar: function () {
+      if(window.cordova && window.cordova.plugins.Keyboard) {
+        $cordovaKeyboard.hideAccessoryBar(false);
+      }
+    },
+    hideAccessoryBar: function () {
+      if(window.cordova && window.cordova.plugins.Keyboard) {
+        $cordovaKeyboard.hideAccessoryBar(true);
       }
     }
   };
