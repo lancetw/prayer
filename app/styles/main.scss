@@ -8,6 +8,12 @@
   -webkit-animation: 0s none;
 }
 
+.item.item-clear {
+  border: 0;
+  color: $light;
+  background-color: transparent;
+}
+
 .has-header.has-subheader.subheader-fix {
   top: 43px;
   .scroll {
@@ -72,18 +78,41 @@ input[type="text"].itemInput {
 
   .slider-slide {
     padding-top: 80px;
-    color: #000;
-    background-color: #fff;
+    color: $light;
+    background-color: #434;
     text-align: center;
     font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
     font-weight: 300;
+  }
+
+  h1, h2, h3, h4, h5 {
+    color: $light;
+  }
+
+  h4 {
+    padding-bottom: 10px;
+  }
+
+  .button {
+    color: $light;
+    background-color: #434;
+    border-color: $light;
   }
 }
 
 #logo {
   margin: 30px 0px;
   font-size: 128px;
-  color: $dark;
+  color: $light;
+}
+
+.icon.svgicon-prayer.svgicon-prayer-dark {
+  background-color: $dark;
+  border-width: 0;
+  border-radius: 50%;
+  width: 128px;
+  height: 128px;
+  font-size: 128px;
 }
 
 #list {

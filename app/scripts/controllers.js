@@ -307,7 +307,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, LoadingService, UserAction) {
+.controller('MainCtrl', function ($scope, $state, $ionicPlatform, $timeout, $log, $q, $location, $ionicHistory, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, LoadingService, UserAction) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -363,45 +363,47 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     KeyboardService.close();
 
-    $scope.auth = {
-      email: $scope.user.email,
-      uuidx: $scope.device.uuid
-    };
+    $scope.Device().then(function () {
+      LoadingService.loading();
 
-    LoadingService.loading();
+      $scope.auth = {
+        email: $scope.user.email,
+        uuidx: $scope.device.uuid
+      };
 
-    UserAction.setAuth($scope.auth);
+      UserAction.setAuth($scope.auth);
 
-    if ($scope.map && $scope.map.item.ocname && $scope.mtarget.name) {
-      UserAction.addUser($scope.user)
-      .then(function () {
-        return UserAction.setting($scope.user);
-      })
-      .then(function () {
-        return UserAction.joinChurch($scope.map);
-      })
-      .then(function () {
-        return UserAction.addMtarget($scope.mtarget, true);
-      })
-      .then(function () {
-        NotifyService.run($scope.mtarget);
-        $scope.Login();
-      });
-
-    } else {
-      UserAction.checkUser($scope.user)
-      .then(function () {
-        return UserAction.setting($scope.user);
-      })
-      .then(function () {
-        $scope.Login();
-      });
-    }
+      if ($scope.map && $scope.map.item && $scope.map.item.hasOwnProperty('ocname') && $scope.mtarget.name) {
+        UserAction.addUser($scope.user)
+        .then(function () {
+          return UserAction.setting($scope.user);
+        })
+        .then(function () {
+          return UserAction.joinChurch($scope.map);
+        })
+        .then(function () {
+          return UserAction.addMtarget($scope.mtarget, true);
+        })
+        .then(function () {
+          NotifyService.run($scope.mtarget);
+          $scope.Login();
+        });
+      } else {
+        UserAction.checkUser($scope.user)
+        .then(function () {
+          return UserAction.setting($scope.user);
+        })
+        .then(function () {
+          $scope.Login();
+        });
+      }
+    });
   };
 
   $scope.Login = function () {
     ConfigService.setAuth($scope.auth);
     MtargetsService.clean();
+    $ionicHistory.clearCache();
     $state.go('tab.prayer-index');
   };
 
@@ -410,9 +412,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $ionicPlatform.ready(function () {
-    $scope.init().then(function () {
-      $scope.Device();
-    });
+    $scope.init();
   });
 })
 
@@ -663,7 +663,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     .then(function () {
       return $scope.showChurch();
     }).then(function () {
+      LoadingService.loading();
       return $scope.prepareTargets();
+    }).then(function () {
+      LoadingService.done();
+    }, function () {
+      LoadingService.log();
     });
   });
 
@@ -734,7 +739,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('AboutsCtrl', function ($ionicPlatform) {
+.controller('AboutsCtrl', function ($ionicPlatform, $ionicScrollDelegate, $ionicHistory, $scope, $state, ConfigService) {
+  $scope.doLogout = function () {
+    $ionicScrollDelegate.scrollTop();
+    ConfigService.purge();
+    $state.go('intro');
+  };
+
   $ionicPlatform.ready(function () {
   });
 })

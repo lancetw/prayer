@@ -9,7 +9,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
   return {
     'responseError': function(response) {
       if (+response.status === 401) {
-        $location.path('/');
+        $location.path('/main');
       }
       return $q.reject(response);
     }
@@ -174,6 +174,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           q.reject(data);
         }
       }, function (err) {
+        console.log(auth.uuidx);
+        console.log(auth.email);
         LoadingService.error('無法登入，請重試一次');
         q.reject(err);
       });
