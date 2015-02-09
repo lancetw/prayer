@@ -33,11 +33,14 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, localStorageServiceProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $httpProvider, localStorageServiceProvider) {
 
   localStorageServiceProvider.setPrefix('Prayer');
 
   $ionicConfigProvider.backButton.previousTitleText(false).text('');
+
+  $httpProvider.interceptors.push('globalHttpErrorInterceptor');
+
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
   // Set up the various states which the app can be in.

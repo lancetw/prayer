@@ -5,6 +5,18 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
+.factory('globalHttpErrorInterceptor', function ($q, $location) {
+  return {
+    'responseError': function(response) {
+      if (+response.status === 401) {
+        $location.path('/');
+      }
+      return $q.reject(response);
+    }
+  };
+})
+
+
 .factory('TWZipCode', function ($http, $q) {
   return {
     all: function () {
