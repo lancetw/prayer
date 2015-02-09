@@ -734,9 +734,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('AboutsCtrl', function ($ionicPlatform, ConfigService) {
+.controller('AboutsCtrl', function ($ionicPlatform) {
   $ionicPlatform.ready(function () {
-    ConfigService.purge();
   });
 })
 
