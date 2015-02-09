@@ -7,20 +7,22 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicNavBarDelegate.showBackButton(false);
 
   $scope.Device = function () {
+    LoadingService.loading();
     DeviceService.detect()
     .then(function (uuid) {
       if (auth && auth.uuidx === uuid) {
         $state.go('tab.prayer-index');
       } else {
         ConfigService.purge();
+        LoadingService.done();
       }
     }, function () {
       var uuid = 'TESTONLY';
       if (auth && auth.uuidx === uuid) {
-        LoadingService.loading();
         $state.go('tab.prayer-index');
       } else {
         ConfigService.purge();
+        LoadingService.done();
       }
     });
   };
@@ -50,11 +52,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('LocationCtrl', function ($scope, $state, $ionicPlatform, $ionicPopup, $log, $q, $timeout, $ionicNavBarDelegate, GPSService, ConfigService) {
+.controller('LocationCtrl', function ($scope, $state, $ionicPlatform, $ionicPopup, $log, $q, $timeout, $ionicNavBarDelegate, GPSService, ConfigService, LoadingService) {
 
   $ionicNavBarDelegate.showBackButton(true);
 
   $scope.GPS = function() {
+    LoadingService.loading();
     GPSService.run()
     .then(function (gps) {
       $scope.map = {
@@ -66,6 +69,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       if ($scope.map.lat && $scope.map.lng) {
         $timeout(function () { $state.go('map'); }, 200);
+      } else {
+        LoadingService.log();
       }
     }, function (err) {
       $ionicPopup.alert({
@@ -438,6 +443,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.doRefresh = function () {
+    $scope.showChurch();
     $scope.prepareTargets(true).then(function () {
       $scope.$broadcast('scroll.refreshComplete');
     }, function () {
@@ -445,7 +451,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
   };
 
-  $scope.church = function () {
+  $scope.showChurch = function () {
     var q = $q.defer();
     var drv = ChurchesService.init($scope.auth);
     drv.get().$promise.then(function (data) {
@@ -655,8 +661,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicPlatform.ready(function () {
     $scope.init()
     .then(function () {
-      $scope.church();
-      $scope.prepareTargets();
+      return $scope.showChurch();
+    }).then(function () {
+      return $scope.prepareTargets();
     });
   });
 

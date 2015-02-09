@@ -1,15 +1,18 @@
 <ion-view hide-back-button="true" title="選擇教會所在地">
   <ion-nav-buttons side="right"></ion-nav-buttons>
-  <ion-content>
+  <ion-content class="padding-bottom">
 
-    <div class="list list-inset">
-      <button class="button button-block button-assertive" ng-click="rerun()">
+    <div class="list padding-top">
+      <button class="button button-full button-assertive" ng-click="rerun()">
       重新取得 GPS 資訊
       </button>
-      <button class="button button-block button-dark" ng-click="toAddress()">
+      <button class="button button-full button-dark" ng-click="toAddress()">
       或是使用所在地找尋我的教會
       </button>
-      <button ng-click="toMain()" class="button button-block button-stable">我已經是守望者</button>
+    </div>
+
+    <div class="list">
+      <button ng-click="toMain()" class="button button-full button-stable">我已經是守望者</button>
     </div>
 
   </ion-content>

@@ -18,7 +18,7 @@
       <button class="button button-clear button-positive" ng-click="">回報錯誤</button>
     </div>
 
-    <div class="item text-center" ng-hide="mtargets.length !== 0">
+    <div class="item text-center" ng-show="church.name && mtargets.length === 0" ng-hide="mtargets.length !== 0">
       目前沒有認領的對象
     </div>
 
