@@ -86,7 +86,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     .state('tab', {
       url: '/tab',
       abstract: true,
-      templateUrl: 'templates/tabs.html',
+      templateUrl: 'templates/tabs.html'
     })
 
     .state('tab.prayer-index', {

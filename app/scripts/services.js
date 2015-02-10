@@ -5,10 +5,11 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
-.factory('globalHttpErrorInterceptor', function ($q, $location) {
+.factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
   return {
     'responseError': function(response) {
       if (+response.status === 401) {
+        ConfigService.purge();
         $location.path('/main');
       }
       return $q.reject(response);
@@ -53,7 +54,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return localStorageService.get('mtarget');
     },
     clearMtarget: function () {
-      localStorageService.set('mtarget', null);
+      localStorageService.set('mtarget', '');
     },
     setAuth: function (auth) {
       localStorageService.set('auth', auth);
@@ -147,11 +148,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       user.email = user_.email;
       user.uuidx = auth.uuidx;
       user.$save().then(function (data) {
-        if (data.email === user_.email) {
-          return q.resolve(data);
-        } else {
-          return q.reject(data);
-        }
+        return q.resolve(data);
       }, function (err) {
         if (+err.status === 403) {
           LoadingService.error('已經有此使用者，但無法在此裝置上使用。');
@@ -174,8 +171,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           q.reject(data);
         }
       }, function (err) {
-        console.log(auth.uuidx);
-        console.log(auth.email);
         LoadingService.error('無法登入，請重試一次');
         q.reject(err);
       });
@@ -240,10 +235,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         q.resolve(data);
       }, function (err) {
         if (+err.status === 302) {
-          LoadingService.error('重複的禱告對象');
           if (skip) {
-            q.resolve(err);
+            q.resolve('302');
           } else {
+            LoadingService.error('重複的禱告對象');
             q.reject(err);
           }
         } else {
@@ -300,6 +295,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       var now = new Date().getTime();
       var title = '一領一禱告認領';
       var message = '你已經有' + (mtarget_.freq / (60*60*24)) + '天沒有為' + mtarget_.name + '禱告囉！';
+      var date = new Date(now + 1000 * mtarget_.freq);
 
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
@@ -307,7 +303,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
           $cordovaLocalNotification.add({
             id:         mtarget_.tid,
-            date:       new Date(now + mtarget_.freq*1000).getTime(),
+            date:       date,
             message:    message,
             title:      title,
             badge:      badges

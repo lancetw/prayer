@@ -95,8 +95,8 @@ input[type="text"].itemInput {
 
   .button {
     color: $light;
-    background-color: #434;
-    border-color: $light;
+    background-color: rgba(0, 0, 0, .3);
+    border-color: rgba(0, 0, 0, .3);
   }
 }
 
@@ -113,6 +113,10 @@ input[type="text"].itemInput {
   width: 128px;
   height: 128px;
   font-size: 128px;
+}
+
+.item.highlight {
+  color: rgba(244, 231, 114, 1);
 }
 
 #list {
