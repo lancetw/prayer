@@ -131,7 +131,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.openModal = function() {
     $scope.modal.show();
-    LoadingService.done();
     $scope.modalIsOpening = true;
   };
   $scope.closeModal = function() {
@@ -806,7 +805,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.doLogout = function () {
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
-    $state.go('intro', {}, {cache: false, reload: true});
+    $state.go('intro');
   };
 
   $ionicPlatform.ready(function () {

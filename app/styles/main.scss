@@ -1,5 +1,49 @@
 @import 'colors';
-@import '../lib/icomoon/style.css';
+@font-face {
+  font-family: 'svgicon';
+  src:url('../fonts/svgicon.eot?-k4mz6z');
+  src:url('../fonts/svgicon.eot?#iefix-k4mz6z') format('embedded-opentype'),
+    url('../fonts/svgicon.woff?-k4mz6z') format('woff'),
+    url('../fonts/svgicon.ttf?-k4mz6z') format('truetype'),
+    url('../fonts/svgicon.svg?-k4mz6z#svgicon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="svgicon-"], [class*=" svgicon-"] {
+  font-family: 'svgicon';
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.svgicon-about:before {
+  content: "\e600";
+}
+
+.svgicon-mission:before {
+  content: "\e601";
+}
+
+.svgicon-prayer:before {
+  content: "\e602";
+}
+
+.svgicon-resource:before {
+  content: "\e603";
+}
+
+.svgicon-reward:before {
+  content: "\e604";
+}
+
 
 .item-enter.ng-animate {
   transition:0s none;

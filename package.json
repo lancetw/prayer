@@ -50,7 +50,6 @@
   "cordovaPlugins": [
     "https://github.com/driftyco/ionic-plugins-keyboard.git",
     "org.apache.cordova.statusbar",
-    "org.apache.cordova.console",
     "org.apache.cordova.geolocation",
     "https://github.com/katzer/cordova-plugin-local-notifications.git",
     "org.apache.cordova.device",

@@ -256,7 +256,8 @@ module.exports = function (grunt) {
             '<%= yeoman.images %>/**/*.{png,jpg,jpeg,gif,webp,svg}',
             '*.html',
             'templates/**/*.html',
-            'fonts/*'
+            'fonts/*',
+            'scripts/*.json'
           ]
         }, {
           expand: true,
@@ -274,6 +275,12 @@ module.exports = function (grunt) {
       fonts: {
         expand: true,
         cwd: 'app/lib/ionic/release/fonts/',
+        dest: '<%= yeoman.app %>/fonts/',
+        src: '*'
+      },
+      icomoon: {
+        expand: true,
+        cwd: 'app/lib/icomoon/fonts/',
         dest: '<%= yeoman.app %>/fonts/',
         src: '*'
       },
@@ -311,19 +318,22 @@ module.exports = function (grunt) {
         'compass:server',
         'copy:styles',
         'copy:vendor',
-        'copy:fonts'
+        'copy:fonts',
+        'copy:icomoon'
       ],
       test: [
         'compass',
         'copy:styles',
         'copy:vendor',
-        'copy:fonts'
+        'copy:fonts',
+        'copy:icomoon'
       ],
       dist: [
         'compass:dist',
         'copy:styles',
         'copy:vendor',
-        'copy:fonts'
+        'copy:fonts',
+        'copy:icomoon'
       ]
     },
 
@@ -513,10 +523,10 @@ module.exports = function (grunt) {
   });
   grunt.registerTask('run', function() {
     grunt.config('concurrent.ionic.tasks', ['ionic:run:' + this.args.join(), 'watch']);
-    return grunt.task.run(['init', 'concurrent:ionic']);
+    return grunt.task.run(['compress', 'concurrent:ionic']);
   });
   grunt.registerTask('build', function() {
-    return grunt.task.run(['init', 'ionic:build:' + this.args.join()]);
+    return grunt.task.run(['compress', 'ionic:build:' + this.args.join()]);
   });
 
   grunt.registerTask('init', [
