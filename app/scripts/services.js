@@ -273,7 +273,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         name: mtarget_.name,
         mask: (function () {
           if (mtarget_.name.length > 2) {
-            return mtarget_.name[0] + new Array(mtarget_.name.length-2).join('★') + mtarget_.name.slice(-1);
+            return mtarget_.name[0] + new Array(mtarget_.name.length-1).join('★') + mtarget_.name.slice(-1);
           } else {
             return mtarget_.name[0] + '★';
           }
@@ -309,7 +309,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         name: mtarget_.name,
         mask: (function () {
           if (mtarget_.name.length > 2) {
-            return mtarget_.name[0] + new Array(mtarget_.name.length-2).join('★') + mtarget_.name.slice(-1);
+            return mtarget_.name[0] + new Array(mtarget_.name.length-1).join('★') + mtarget_.name.slice(-1);
           } else {
             return mtarget_.name[0] + '★';
           }
