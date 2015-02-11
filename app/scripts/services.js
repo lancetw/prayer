@@ -5,19 +5,6 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
-
-.provider('track', function () {
-  this.$get = function (LogService) {
-    return {
-      do: function (type, data) {
-        LogService.init();
-        LogService.log(type, data);
-      }
-    };
-  };
-})
-
-
 .factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
   return {
     'responseError': function(response) {
@@ -131,7 +118,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
   };
 })
 
-
 .factory('LogService', function ($ionicPlatform, $cordovaDevice, $resource, ENV, DeviceService, ConfigService, base64) {
   return {
     init: function (token) {
@@ -141,7 +127,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         }
       );
     },
-    log: function (type, data) {
+    do: function (type, data) {
       $ionicPlatform.ready(function () {
         DeviceService.info().then(function (info) {
           var auth = ConfigService.getAuth();
@@ -438,7 +424,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return $resource(ENV.apiEndpoint + 'map', {lng: prams.lng, lat: prams.lat}, {'get': {method: 'GET', cache: true, timeout: timeout_}});
     },
     nearby: function (prams) {
-      return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, lat: prams.lat}, {'query': {method: 'GET', isArray: true, cache: true, timeout: timeout_}});
+      return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, lat: prams.lat, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
     }
   };
 })

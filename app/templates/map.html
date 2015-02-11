@@ -2,17 +2,17 @@
   <ion-nav-buttons side="right"></ion-nav-buttons>
   <ion-content>
 
-    <!--<ion-item class="item item-stable text-center">
-      <p>教會名錄資料由中華基督教網路發展協會提供</p>
-      <p>church.oursweb.net</p>
-    </ion-item>-->
-
     <ion-list>
-      <ion-item ng-click="toMtarget(item)" ng-repeat="item in map.items" class="">
+      <ion-item ng-click="toMtarget(item)" ng-repeat="item in map.items track by $index">
       <h3>{{item.ocname}}</h3>
       <p>{{item.address}}</p>
       </ion-item>
     </ion-list>
+    <ion-infinite-scroll
+      ng-if="moreDataCanBeLoaded()"
+      icon="ion-loading-c"
+      on-infinite="loadMoreData()">
+    </ion-infinite-scroll>
   </ion-content>
   <ion-footer-bar class="range range-stable bar-dark">
     1公里

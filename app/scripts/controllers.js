@@ -117,6 +117,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         animation: 'slide-in-up'
       });
 
+      $scope.map.items = [];
+      $scope.map.page = 1;
+      $scope.map.total = 0;
+      $scope.modalIsOpening = false;
+
     } catch (err) {
       q.reject(err);
     }
@@ -126,26 +131,54 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.openModal = function() {
     $scope.modal.show();
+    LoadingService.done();
+    $scope.modalIsOpening = true;
   };
   $scope.closeModal = function() {
     $scope.modal.hide();
+    $scope.modalIsOpening = false;
   };
 
   $scope.fetchList = function (city, region) {
-    LoadingService.loading(3000);
+    LoadingService.loading();
 
     $scope.map.code = 'TW';
     $scope.map.city = city;
     $scope.map.town = region;
 
-    MapService.nearby($scope.map).query( function (data) {
-      $scope.map.items = data;
+    $scope.loadMoreData();
 
-      $timeout($scope.openModal, 100);
+    $timeout(function () {
+      $scope.openModal();
+    }, 100);
+  };
+
+  $scope.loadMoreData = function() {
+
+    MapService.nearby($scope.map).query( function (resp) {
+      $scope.map.total = resp.total;
+      $scope.map.lastPage = resp.last_page;
+      $scope.map.items = $scope.map.items.concat(resp.data);
+      $scope.$broadcast('scroll.infiniteScrollComplete');
+      $scope.map.page += 1;
+
+      LoadingService.done();
 
     }, function (err) {
       LoadingService.log(err);
     });
+
+  };
+
+  $scope.moreDataCanBeLoaded = function () {
+    if (!$scope.modalIsOpening) {
+      return false;
+    }
+    if ($scope.map.total > $scope.map.items.length) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   $scope.toLocation = function() {
@@ -181,6 +214,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $scope.map = ConfigService.getMap();
       $scope.map.dist = 2000;
+      $scope.map.items = [];
+      $scope.map.page = 1;
+      $scope.map.total = 0;
+
+      $scope.fetchInfo().then(function () {
+        $scope.loadMoreData();
+      });
 
       var timeoutId = null;
       $scope.$watch('map.dist', function () {
@@ -190,9 +230,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
           $timeout.cancel(timeoutId);
           timeoutId = null;
 
-          $scope.fetchInfo().then(function () {
-            $scope.fetchList();
-          });
+          $scope.map.items = [];
+          $scope.map.page = 1;
 
           $timeout(function () { $ionicScrollDelegate.scrollTop(); }, 50);
         }, 1000);
@@ -205,20 +244,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
 
     return q.promise;
-  };
-
-  $scope.fetchList = function () {
-    MapService.nearby($scope.map).query( function (data) {
-      $scope.map.items = {};
-      if (data.length > 0) {
-        $scope.map.items = data;
-        LoadingService.done();
-      } else {
-        LoadingService.error('附近沒有教會，請嘗試增加距離');
-      }
-    }, function (err) {
-      LoadingService.log(err);
-    });
   };
 
   $scope.fetchInfo = function () {
@@ -235,6 +260,31 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
 
     return q.promise;
+  };
+
+  $scope.loadMoreData = function() {
+
+    MapService.nearby($scope.map).query( function (resp) {
+      $scope.map.total = resp.total;
+      $scope.map.lastPage = resp.last_page;
+      $scope.map.items = $scope.map.items.concat(resp.data);
+      $scope.$broadcast('scroll.infiniteScrollComplete');
+      $scope.map.page += 1;
+
+      LoadingService.done();
+
+    }, function (err) {
+      LoadingService.log(err);
+    });
+
+  };
+
+  $scope.moreDataCanBeLoaded = function () {
+    if ($scope.map.total > $scope.map.items.length) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   $scope.toMtarget = function (item) {
@@ -271,7 +321,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         {name:'六天', val: 86400*6},
         {name:'七天', val: 86400*7}
       ];
-      $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
+      $scope.mtarget.freq = $scope.mtarget.freqs[0].val;
 
       q.resolve($scope.mtarget);
 
@@ -488,7 +538,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       {name:'六天', val: 86400*6},
       {name:'七天', val: 86400*7}
     ];
-    $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
+    $scope.mtarget.freq = $scope.mtarget.freqs[0].val;
 
     $scope.modal.show();
   };
@@ -756,7 +806,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.doLogout = function () {
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
-    $state.go('intro', {}, {reload: true});
+    $state.go('intro', {}, {cache: false, reload: true});
   };
 
   $ionicPlatform.ready(function () {
@@ -773,9 +823,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.regionSubmit = function () {
     $scope.twzipcode.city = '';
     $scope.twzipcode.region = ($scope.invert($scope.twzipcode.citySel))[$scope.twzipcode.regionSel];
-    $scope.each($scope.twZipCodeData, function (ele, _city) {
-      $scope.each(ele, function (_ele2, _region) {
-        if (_region === $scope.twzipcode.region) {
+
+    $scope.each($scope.twZipCodeData, function (_dt) {
+      $scope.each(_dt, function (_zipcode, _city) {
+        if (_zipcode === $scope.twzipcode.regionSel) {
           $scope.twzipcode.city = _city;
         }
       });

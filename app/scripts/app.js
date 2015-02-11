@@ -33,7 +33,31 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $provide, $httpProvider, localStorageServiceProvider, ENV, trackProvider) {
+.provider('Log', function($provide, $injector) {
+  var log = {};
+
+  this.register = function(name, data) {
+    $provide.factory(name, function($window, $log, $q, LogService, ConfigService) {
+        var auth = ConfigService.getAuth();
+        if (auth.email) {
+          LogService.init(auth);
+          LogService.do(data);
+        }
+        var deferred = $q.defer();
+        deferred.resolve(auth);
+        return deferred.promise;
+    });
+  };
+
+  this.$get = function() {
+    return function(name) {
+      return log[name];
+    };
+  };
+})
+
+
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $provide, $httpProvider, localStorageServiceProvider, ENV, LogProvider) {
 
   localStorageServiceProvider.setPrefix('Prayer');
 
@@ -61,7 +85,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
         console.log('exception', data);
         window.alert('Error: '+data.message);
       } else {
-        trackProvider.do('exception', data);
+        LogProvider.register('exception', data);
       }
     };
   }]);
@@ -86,7 +110,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
       console.log('exception', data);
       window.alert('Error: '+data.message);
     } else {
-      trackProvider.do('exception', data);
+      LogProvider.register('exception', data);
     }
     return stopPropagation;
   };

@@ -41,7 +41,7 @@ module.exports = function (grunt) {
         constants: {
           ENV: {
             name: 'development',
-            apiEndpoint: 'http://1and1.deliverwork.info/api/v1/',
+            apiEndpoint: 'http://192.168.0.100:8000/api/v1/',
             debug: false
           }
         }
@@ -50,7 +50,7 @@ module.exports = function (grunt) {
         constants: {
           ENV: {
             name: 'production',
-            apiEndpoint: 'http://1and1.ccea.org.tw/public/api/v1/',
+            apiEndpoint: 'http://1and1.deliverwork.info/api/v1/',
             debug: false
           }
         }
