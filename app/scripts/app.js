@@ -33,19 +33,21 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   });
 })
 
-.provider('Log', function($provide, $injector) {
+.provider('Log', function($provide) {
   var log = {};
 
   this.register = function(name, data) {
     $provide.factory(name, function($window, $log, $q, LogService, ConfigService) {
-        var auth = ConfigService.getAuth();
-        if (auth.email) {
-          LogService.init(auth);
-          LogService.do(data);
-        }
-        var deferred = $q.defer();
-        deferred.resolve(auth);
-        return deferred.promise;
+      var auth = ConfigService.getAuth();
+      if (auth.email) {
+        LogService.init(auth);
+        LogService.do(data);
+      } else {
+        $log.error(data);
+      }
+      var deferred = $q.defer();
+      deferred.resolve(auth);
+      return deferred.promise;
     });
   };
 
@@ -89,7 +91,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
       }
     };
   }]);
-  // catch exceptions out of angular
+
   window.onerror = function(message, url, line, col, error) {
     var stopPropagation = ENV.debug ? false : true;
     var data = {
@@ -115,10 +117,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     return stopPropagation;
   };
 
-  // Ionic uses AngularUI Router which uses the concept of states
-  // Learn more here: https://github.com/angular-ui/ui-router
-  // Set up the various states which the app can be in.
-  // Each state's controller can be found in controllers.js
+
   $stateProvider
 
     .state('intro', {

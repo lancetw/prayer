@@ -153,7 +153,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.loadMoreData = function() {
-
+    /*jshint camelcase: false */
     MapService.nearby($scope.map).query( function (resp) {
       $scope.map.total = resp.total;
       $scope.map.lastPage = resp.last_page;
@@ -262,7 +262,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.loadMoreData = function() {
-
+    /*jshint camelcase: false */
     MapService.nearby($scope.map).query( function (resp) {
       $scope.map.total = resp.total;
       $scope.map.lastPage = resp.last_page;
@@ -462,7 +462,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, LogFactory) {
+
+
+  LogFactory.do('test', 'test');
 
   $scope.init = function () {
     var q = $q.defer();
@@ -515,7 +518,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var drv = ChurchesService.init($scope.auth);
     drv.get().$promise.then(function (data) {
       $scope.church = data;
-       ConfigService.setChurch($scope.church);
+      ConfigService.setChurch($scope.church);
       q.resolve(data);
     }, function (err) {
       q.reject(err);
@@ -811,7 +814,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
 
-    $state.go('intro');
+    $state.go('intro', {}, {reload: true});
   };
 
   $ionicPlatform.ready(function () {
@@ -831,7 +834,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     $scope.each($scope.twZipCodeData, function (_dt, city) {
       var c = city;
-      $scope.each(_dt, function (_zipcode, _city) {
+      $scope.each(_dt, function (_zipcode) {
         if (_zipcode === $scope.twzipcode.regionSel) {
           $scope.twzipcode.city = c;
         }

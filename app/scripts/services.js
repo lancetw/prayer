@@ -124,30 +124,53 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
   };
 })
 
-.factory('LogService', function ($ionicPlatform, $cordovaDevice, $resource, ENV, DeviceService, ConfigService, base64) {
-  return {
-    init: function (token) {
-      var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
-      return $resource(ENV.apiEndpoint + 'logs',
-        {'save': { method: 'POST', timeout: timeout_, headers: auth || {}}
-        }
-      );
-    },
+.factory('LogFactory', function ($ionicPlatform, $cordovaDevice, $resource, ENV, $q, DeviceService, ConfigService, LogService, base64) {
+
+  var self = {
     do: function (type, data) {
       $ionicPlatform.ready(function () {
         DeviceService.info().then(function (info) {
+          var q = $q.defer();
           var auth = ConfigService.getAuth();
-          var log = this.init();
-          log.email = auth.email;
-          log.uuidx = auth.uuidx;
-          log.type = type;
-          log.data = data;
-          log.info = info;
-          log.$save();
+          var drv = LogService.init(auth);
+          var settingData = {
+            email: auth.email,
+            uuidx: auth.uuidx,
+            type: type,
+            data: data,
+            info: info
+          };
+          drv.save(settingData)
+          .$promise.then(function (data) {
+            q.resolve(data);
+          }, function (err) {
+            q.reject(err);
+          });
+
+        }, function () {
+          var q = $q.defer();
+          var auth = ConfigService.getAuth();
+          var drv = LogService.init(auth);
+          var settingData = {
+            email: auth.email,
+            uuidx: auth.uuidx,
+            type: type,
+            data: data,
+            info: 'USER NO LOGIN'
+          };
+          drv.save(settingData)
+          .$promise.then(function (data) {
+            q.resolve(data);
+          }, function (err) {
+            q.reject(err);
+          });
+
         });
       });
     }
   };
+
+  return self;
 })
 
 
@@ -431,6 +454,17 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     nearby: function (prams) {
       return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, lat: prams.lat, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
+    }
+  };
+})
+
+.factory('LogService', function ($resource, ENV, base64) {
+  return {
+    init: function (token) {
+      var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
+      return $resource(ENV.apiEndpoint + 'logs', {},
+        {'save': { method: 'POST', timeout: timeout_, headers: auth || {} }}
+      );
     }
   };
 })
