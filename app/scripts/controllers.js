@@ -464,9 +464,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 .controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, LogFactory) {
 
-
-  LogFactory.do('test', 'test');
-
   $scope.init = function () {
     var q = $q.defer();
     try {

@@ -37,13 +37,11 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   var log = {};
 
   this.register = function(name, data) {
-    $provide.factory(name, function($window, $log, $q, LogService, ConfigService) {
+    $provide.factory(name, function($window, $log, $q, LogFactory, ConfigService) {
       var auth = ConfigService.getAuth();
       if (auth.email) {
-        LogService.init(auth);
-        LogService.do(data);
-      } else {
-        $log.error(data);
+        LogFactory.init(auth);
+        LogFactory.do(data);
       }
       var deferred = $q.defer();
       deferred.resolve(auth);
