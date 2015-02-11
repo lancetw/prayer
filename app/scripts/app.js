@@ -33,13 +33,63 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $httpProvider, localStorageServiceProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $provide, $httpProvider, localStorageServiceProvider, ENV, trackProvider) {
 
   localStorageServiceProvider.setPrefix('Prayer');
 
   $ionicConfigProvider.backButton.previousTitleText(false).text('');
 
   $httpProvider.interceptors.push('globalHttpErrorInterceptor');
+
+  $provide.decorator('$exceptionHandler', ['$delegate', function($delegate) {
+    return function(exception, cause) {
+      $delegate(exception, cause);
+
+      var data = {
+        type: 'angular',
+        url: window.location.hash,
+        localtime: Date.now()
+      };
+      if (cause)               { data.cause    = cause;              }
+      if (exception) {
+        if (exception.message) { data.message  = exception.message;  }
+        if (exception.name)    { data.name     = exception.name;     }
+        if (exception.stack)   { data.stack    = exception.stack;    }
+      }
+
+      if(ENV.debug) {
+        console.log('exception', data);
+        window.alert('Error: '+data.message);
+      } else {
+        trackProvider.do('exception', data);
+      }
+    };
+  }]);
+  // catch exceptions out of angular
+  window.onerror = function(message, url, line, col, error) {
+    var stopPropagation = ENV.debug ? false : true;
+    var data = {
+      type: 'javascript',
+      url: window.location.hash,
+      localtime: Date.now()
+    };
+    if(message)       { data.message      = message;      }
+    if(url)           { data.fileName     = url;          }
+    if(line)          { data.lineNumber   = line;         }
+    if(col)           { data.columnNumber = col;          }
+    if(error){
+      if(error.name)  { data.name         = error.name;   }
+      if(error.stack) { data.stack        = error.stack;  }
+    }
+
+    if(ENV.debug) {
+      console.log('exception', data);
+      window.alert('Error: '+data.message);
+    } else {
+      trackProvider.do('exception', data);
+    }
+    return stopPropagation;
+  };
 
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router

@@ -413,7 +413,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -422,6 +422,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $ionicModal.fromTemplateUrl('templates/mtarget-new.html', function ($ionicModal) {
         $scope.modal = $ionicModal;
+      }, {
+        scope: $scope,
+        animation: 'slide-in-up'
+      });
+
+      $ionicModal.fromTemplateUrl('templates/church-info.html', function ($ionicModal) {
+        $scope.churchModal = $ionicModal;
       }, {
         scope: $scope,
         animation: 'slide-in-up'
@@ -459,6 +466,14 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
 
     return q.promise;
+  };
+
+  $scope.openChurchModal = function () {
+    $scope.churchModal.show();
+  };
+
+  $scope.closeChurchModal = function () {
+    $scope.churchModal.hide();
   };
 
   $scope.openMtargetModal = function () {
@@ -499,6 +514,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       LoadingService.msg('新增完成');
       $scope.closeMtargetModal();
+      $ionicScrollDelegate.scrollTop();
       MtargetsService.update($scope.mtargets);
       LoadingService.done();
 

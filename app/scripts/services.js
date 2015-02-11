@@ -5,6 +5,19 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
+
+.provider('track', function () {
+  this.$get = function (LogService) {
+    return {
+      do: function (type, data) {
+        LogService.init();
+        LogService.log(type, data);
+      }
+    };
+  };
+})
+
+
 .factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
   return {
     'responseError': function(response) {
@@ -66,7 +79,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('LoadingService', function ($rootScope, $ionicLoading, $timeout, $log) {
+.factory('LoadingService', function ($ionicLoading, $timeout, $log) {
   return {
     loading: function (duration) {
       //duration = (typeof duration === 'undefined') ? '1000' : duration;
@@ -119,6 +132,33 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
+.factory('LogService', function ($ionicPlatform, $cordovaDevice, $resource, ENV, DeviceService, ConfigService, base64) {
+  return {
+    init: function (token) {
+      var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
+      return $resource(ENV.apiEndpoint + 'logs',
+        {'save': { method: 'POST', timeout: timeout_, headers: auth || {}}
+        }
+      );
+    },
+    log: function (type, data) {
+      $ionicPlatform.ready(function () {
+        DeviceService.info().then(function (info) {
+          var auth = ConfigService.getAuth();
+          var log = this.init();
+          log.email = auth.email;
+          log.uuidx = auth.uuidx;
+          log.type = type;
+          log.data = data;
+          log.info = info;
+          log.$save();
+        });
+      });
+    }
+  };
+})
+
+
 .factory('DeviceService', function ($ionicPlatform, $q, $cordovaDevice) {
   return {
     detect: function () {
@@ -126,6 +166,19 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         var uuid = $cordovaDevice.getUUID();
         q.resolve(uuid);
+      } catch (err) {
+        q.reject(err);
+      }
+      return q.promise;
+    },
+    info: function () {
+      var q = $q.defer();
+      try {
+        var platform = $cordovaDevice.getPlatform();
+        var model = $cordovaDevice.getModel();
+        var version = $cordovaDevice.getVersion();
+        var info = platform + ' ' + model + ' ' + version;
+        q.resolve(info);
       } catch (err) {
         q.reject(err);
       }
@@ -220,7 +273,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         name: mtarget_.name,
         mask: (function () {
           if (mtarget_.name.length > 2) {
-            return mtarget_.name[0] + '★' + mtarget_.name.slice(-1);
+            return mtarget_.name[0] + new Array(mtarget_.name.length-2).join('★') + mtarget_.name.slice(-1);
           } else {
             return mtarget_.name[0] + '★';
           }
@@ -256,7 +309,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         name: mtarget_.name,
         mask: (function () {
           if (mtarget_.name.length > 2) {
-            return mtarget_.name[0] + '★' + mtarget_.name.slice(-1);
+            return mtarget_.name[0] + new Array(mtarget_.name.length-2).join('★') + mtarget_.name.slice(-1);
           } else {
             return mtarget_.name[0] + '★';
           }
