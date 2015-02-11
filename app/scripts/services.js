@@ -41,6 +41,12 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     purge: function () {
       localStorageService.clearAll();
     },
+    setChurch: function (church) {
+      localStorageService.set('church', church);
+    },
+    getChurch: function () {
+      return localStorageService.get('church');
+    },
     setMap: function (map) {
       localStorageService.set('map', map);
     },
@@ -479,6 +485,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 .factory('MtargetsService', function ($resource, $q, $log, ENV, localStorageService, base64, _, ConfigService) {
 
   var items = {};
+
   return {
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };

@@ -487,6 +487,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $scope.auth = ConfigService.getAuth();
 
+      $scope.church = ConfigService.getChurch();
+
+      if (!$scope.church) {
+        $scope.showChurch();
+      }
+
       q.resolve($scope.auth);
 
     } catch (err) {
@@ -509,6 +515,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var drv = ChurchesService.init($scope.auth);
     drv.get().$promise.then(function (data) {
       $scope.church = data;
+       ConfigService.setChurch($scope.church);
       q.resolve(data);
     }, function (err) {
       q.reject(err);
@@ -723,12 +730,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicPlatform.ready(function () {
     $scope.init()
     .then(function () {
-      return $scope.showChurch();
-    }).then(function () {
-      LoadingService.loading();
+      //LoadingService.loading();
       return $scope.prepareTargets();
     }).then(function () {
-      LoadingService.done();
+      //LoadingService.done();
     }, function () {
       LoadingService.log();
     });
@@ -783,7 +788,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicPlatform.ready(function () {
     $scope.init();
     if (!$scope.mtarget) {
-      $state.go('tab.prayer-index', {}, {reload: true});
+      $state.go('tab.prayer-index');
     }
   });
 
@@ -805,6 +810,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.doLogout = function () {
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
+
     $state.go('intro');
   };
 
@@ -823,15 +829,18 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.twzipcode.city = '';
     $scope.twzipcode.region = ($scope.invert($scope.twzipcode.citySel))[$scope.twzipcode.regionSel];
 
-    $scope.each($scope.twZipCodeData, function (_dt) {
+    $scope.each($scope.twZipCodeData, function (_dt, city) {
+      var c = city;
       $scope.each(_dt, function (_zipcode, _city) {
         if (_zipcode === $scope.twzipcode.regionSel) {
-          $scope.twzipcode.city = _city;
+          $scope.twzipcode.city = c;
         }
       });
     });
 
     if ($scope.twzipcode.city && $scope.twzipcode.region) {
+      $scope.map.items = [];
+      $scope.map.page = 1;
       $scope.fetchList($scope.twzipcode.city, $scope.twzipcode.region);
     }
 
