@@ -374,7 +374,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
             date:       date,
             message:    message,
             title:      title,
-            badge:      badges
+            badge:      badges,
+            repeat:     'daily'
           });
 
         });
@@ -401,7 +402,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         $cordovaLocalNotification.promptForPermission();
 
         $cordovaLocalNotification.hasPermission().then(function () {
-          $cordovaLocalNotification.setDefaults({ autoCancel: true });
+          $cordovaLocalNotification.setDefaults({ autoCancel: false });
           badges = 0;
           $cordovaLocalNotification.cancelAll();
         });
