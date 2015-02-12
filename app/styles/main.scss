@@ -63,10 +63,14 @@
 }
 
 .item-enter.ng-animate {
-  transition:0s none;
-  -webkit-transition:0s none;
+  transition: 0s none;
+  -webkit-transition: 0s none;
   animation: 0s none;
-  -webkit-animation: 0s none;
+  -webkit-animation:  0s none;
+}
+
+.item-enter.activated {
+  background: transparent;
 }
 
 .item.item-clear {
