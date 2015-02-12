@@ -351,8 +351,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('NotifyService', function ($ionicPlatform, $q, $cordovaLocalNotification) {
+.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup) {
   var badges = 0;
+  var reqPermissionCount = 0;
+  var maxReqPermissionCount = 3;
 
   return {
     run: function (mtarget_) {
@@ -378,8 +380,18 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
             repeat:     'daily'
           });
 
+        }, function () {
+          reqPermissionCount = reqPermissionCount + 1;
+          if (reqPermissionCount <= maxReqPermissionCount) {
+            $ionicPopup.alert({
+              title: '需要開啟通知權限',
+              template: '請開啟一領一禱告認領的通知權限（超過三次將不再提醒）'
+            });
+          }
         });
-      } catch (err) {}
+      } catch (err) {
+
+      }
     },
     cancel: function (tid) {
       try {
