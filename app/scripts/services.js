@@ -335,7 +335,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         meeter: mtarget_.meeter
       };
       var drv = MtargetsService.init(auth);
-
       LoadingService.loading();
 
       drv.update(settingData)
@@ -389,9 +388,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
             });
           }
         });
-      } catch (err) {
-
-      }
+      } catch (err) {}
     },
     cancel: function (tid) {
       try {
@@ -412,11 +409,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         // TODO 檢查新版本的變化
         $cordovaLocalNotification.promptForPermission();
-
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
-          badges = 0;
-          $cordovaLocalNotification.cancelAll();
+          //badges = 0;
+          //$cordovaLocalNotification.cancelAll();
         });
       } catch (err) {}
     }

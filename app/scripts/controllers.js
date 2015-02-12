@@ -102,7 +102,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 })
 
 .controller('AddressCtrl', function ($scope, $state, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService, KeyboardService) {
-
   $scope.init = function () {
 
     var q = $q.defer();
@@ -489,7 +488,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       NotifyService.init();
 
       $scope.auth = ConfigService.getAuth();
-
       $scope.church = ConfigService.getChurch();
 
       if (!$scope.church) {
@@ -517,7 +515,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.doRefresh = function () {
     $scope.showChurch();
-
     $scope.prepareTargets(true).then(function () {
       $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
@@ -635,6 +632,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       item.past = new Date();
 
       MtargetsService.update($scope.mtargets);
+      NotifyService.cancel($scope.action.tid);
       NotifyService.run(item);
       LoadingService.done();
     }, function (err) {
@@ -778,7 +776,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     } catch (err) {
       q.reject(err);
     }
-
     return q.promise;
   };
 
@@ -788,7 +785,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     UserAction.setAuth($scope.auth);
     UserAction.updateMtarget($scope.mtarget)
-    .then(function () {
+    .then(function (data) {
       $state.go('tab.prayer-index');
     });
   };
@@ -798,7 +795,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     if ($scope.mtarget.freq > 86400 * 6) {
       $scope.mtarget.freq = 0;
     } else {
-      if ($scope.mtarget.freq === 0 || $scope.mtarget.freq === 43200) {
+      if ($scope.mtarget.freq === 0) {
+        $scope.mtarget.freq = 43200;
+      } else if ($scope.mtarget.freq === 43200) {
         $scope.mtarget.freq += 43200;
       } else {
         $scope.mtarget.freq += 86400;
