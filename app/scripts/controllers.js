@@ -76,7 +76,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }, function (err) {
       $ionicPopup.alert({
         title: '無法取得 GPS 資訊',
-        template: err.message
+        template: err.message_
       });
       $timeout(function () { $state.go('address'); }, 200);
     });

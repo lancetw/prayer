@@ -430,17 +430,17 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         .then(function (position) {
           q.resolve(position);
         }, function (err) {
-          switch (err.code) {
+          switch (+err.code) {
             case 1:
-              err.message = '因拒絕提供 GPS 資訊無法使用本功能';
+              err.message_ = '因拒絕提供 GPS 資訊無法使用本功能';
               q.reject(err);
               break;
             case 2:
-              err.message = '請到訊號良好的地方重新取得 GPS 資訊';
+              err.message_ = '請到訊號良好的地方重新取得 GPS 資訊';
               q.reject(err);
               break;
             case 3:
-              err.message = '訊號不良，請重新嘗試一次';
+              err.message_ = '訊號不良，請重新嘗試一次';
               q.reject(err);
               break;
             default:
