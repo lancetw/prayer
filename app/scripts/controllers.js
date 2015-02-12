@@ -44,8 +44,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.toMain = function() {
-    $scope.map = [];
-    $scope.mtarget = [];
+    ConfigService.purge();
     $state.go('main');
   };
 
@@ -88,8 +87,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.toMain = function() {
-    $scope.map = [];
-    $scope.mtarget = [];
+    ConfigService.purge();
     $state.go('main');
   };
 
