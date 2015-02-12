@@ -12,14 +12,16 @@
     <div class="item item-divider text-center" ng-click="toogleChurchPanel()">
       {{church.name}}
     </div>
-    <div class="button-bar" ng-model="churchPanelState" ng-show="churchPanelState">
+    <div class="button-bar" ng-model="menuIsActive" ng-if="menuIsActive">
       <!--<button class="button button-clear button-positive" ng-click="">修改資料</button>-->
       <button class="button button-clear button-positive" ng-click="openChurchModal()">統計資訊</button>
       <!--<button class="button button-clear button-positive" ng-click="">回報錯誤</button>-->
     </div>
 
-    <div class="item text-center" ng-hide="mtargets.length !== 0">
-      目前沒有認領的對象
+    <div ng-model="showEmptyTips" ng-if="showEmptyTips" ng-class="{true: 'show', false: 'hide'}[showEmptyTips]">
+      <div class="empty-tips item text-center">
+        目前沒有認領的對象
+      </div>
     </div>
 
     <ion-list on-hold="data.showReorder = !data.showReorder; data.showDelete = false" show-reorder="data.showReorder" show-delete="false">

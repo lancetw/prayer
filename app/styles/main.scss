@@ -1,4 +1,5 @@
 @import 'colors';
+
 @font-face {
   font-family: 'svgicon';
   src:url('../fonts/svgicon.eot?-k4mz6z');
@@ -44,6 +45,22 @@
   content: "\e604";
 }
 
+.button-bar.ng-animate {
+  transition:0s none;
+  -webkit-transition:0s none;
+  animation: 0s none;
+  -webkit-animation: 0s none;
+}
+
+.item.empty-tips {
+  &.show {
+    display: block;
+  }
+
+  &.hide {
+    display: none;
+  }
+}
 
 .item-enter.ng-animate {
   transition:0s none;

@@ -124,7 +124,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
   };
 })
 
-.factory('LogFactory', function ($ionicPlatform, $cordovaDevice, $resource, ENV, $q, DeviceService, ConfigService, LogService, base64) {
+.factory('LogFactory', function ($ionicPlatform, $cordovaDevice, $resource, ENV, $q, DeviceService, ConfigService, LogService) {
 
   var self = {
     do: function (type, data) {

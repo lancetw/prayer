@@ -462,7 +462,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, LogFactory) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -490,7 +490,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.church = ConfigService.getChurch();
 
       if (!$scope.church) {
-        $scope.showChurch();
+        $scope.showChurch().then(function () {}, function () {
+          ConfigService.purge();
+          $state.go('intro', {}, {reload: true});
+        });
       }
 
       q.resolve($scope.auth);
@@ -501,11 +504,22 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     return q.promise;
   };
 
+  $scope.checkEmptyTips = function () {
+    if (!$scope.mtargets || $scope.mtargets.length === 0) {
+       $scope.showEmptyTips = true;
+    } else {
+       $scope.showEmptyTips = false;
+    }
+  };
+
   $scope.doRefresh = function () {
     $scope.showChurch();
+
     $scope.prepareTargets(true).then(function () {
+      $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
     }, function () {
+      $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
     });
   };
@@ -573,7 +587,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $ionicScrollDelegate.scrollTop();
       MtargetsService.update($scope.mtargets);
       LoadingService.done();
-
+      $scope.checkEmptyTips();
     }, function (err) {
       if (+err.status === 302) {
         LoadingService.error('重複的禱告對象');
@@ -597,6 +611,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     drv.delete(settingData)
     .$promise.then(function () {
       NotifyService.cancel(tid);
+      $scope.checkEmptyTips();
     }, function (err) {
       LoadingService.log(err);
     });
@@ -722,9 +737,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
   };
 
-
+  $scope.menuIsActive = false;
   $scope.toogleChurchPanel = function () {
-    $scope.churchPanelState = !$scope.churchPanelState;
+    $scope.menuIsActive = !$scope.menuIsActive;
   };
 
   $ionicPlatform.ready(function () {
@@ -733,6 +748,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       //LoadingService.loading();
       return $scope.prepareTargets();
     }).then(function () {
+      $scope.checkEmptyTips();
       //LoadingService.done();
     }, function () {
       LoadingService.log();
