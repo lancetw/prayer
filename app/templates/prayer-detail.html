@@ -23,7 +23,7 @@
 
       <a href="#" class="item item-icon-left" ng-click="updateMtargetFreq()">
         <i class="icon ion-ios7-clock"></i>
-        <span ng-if="mtarget.freq > 0">代禱頻率：{{ mtarget.freq / 60 / 60 / 24 }} 天</span>
+        <span ng-if="mtarget.freq > 0">代禱頻率：{{ getFreqName(mtarget.freq) }} </span>
         <span ng-if="!mtarget.freq || mtarget.freq === 0">代禱頻率未設定</span>
       </a>
 

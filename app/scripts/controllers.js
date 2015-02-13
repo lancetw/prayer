@@ -300,7 +300,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('MtargetCtrl', function ($scope, $state, $log, $q, $ionicPlatform, $ionicNavBarDelegate, ConfigService) {
+.controller('MtargetCtrl', function ($scope, $state, $log, $q, $ionicPlatform, $ionicNavBarDelegate, ConfigService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -312,16 +312,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $scope.mtarget = {};
       $scope.mtarget.sinner = false;
-      $scope.mtarget.freqs = [
-        {name:'一天兩次', val: 43200},
-        {name:'一天', val: 86400},
-        {name:'兩天', val: 86400*2},
-        {name:'三天', val: 86400*3},
-        {name:'四天', val: 86400*4},
-        {name:'五天', val: 86400*5},
-        {name:'六天', val: 86400*6},
-        {name:'七天', val: 86400*7}
-      ];
+      $scope.mtarget.freqs = FreqService.getTable();
       $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
 
       q.resolve($scope.mtarget);
@@ -432,7 +423,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         .then(function () {
           return UserAction.addMtarget($scope.mtarget, true);
         })
-        .then(function () {
+        .then(function (data) {
+          $scope.mtarget = data;
           NotifyService.run($scope.mtarget);
           $scope.Login();
         });
@@ -464,7 +456,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -549,16 +541,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.openMtargetModal = function () {
     $scope.mtarget = {};
     $scope.mtarget.sinner = false;
-    $scope.mtarget.freqs = [
-      {name:'一天兩次', val: 43200},
-      {name:'一天', val: 86400},
-      {name:'兩天', val: 86400*2},
-      {name:'三天', val: 86400*3},
-      {name:'四天', val: 86400*4},
-      {name:'五天', val: 86400*5},
-      {name:'六天', val: 86400*6},
-      {name:'七天', val: 86400*7}
-    ];
+    $scope.mtarget.freqs = FreqService.getTable();
     $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
 
     $scope.modal.show();
@@ -606,6 +589,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var drv = MtargetsService.init($scope.auth);
     if (!$scope.mtargets || $scope.mtargets.length === 0) {
       $scope.showDeleteState = false;
+      NotifyService.purge();
       $ionicListDelegate.showDelete($scope.showDeleteState);
     }
     MtargetsService.remove(tid);
@@ -630,10 +614,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       var item = MtargetsService.item($scope.action.tid);
       item.status = false;
       item.past = new Date();
+      NotifyService.cancel(item.id);
+      NotifyService.run(item);
 
       MtargetsService.update($scope.mtargets);
-      NotifyService.cancel($scope.action.tid);
-      NotifyService.run(item);
+
       LoadingService.done();
     }, function (err) {
       LoadingService.log(err);
@@ -752,15 +737,15 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       return $scope.prepareTargets();
     }).then(function () {
       $scope.checkEmptyTips();
-      //LoadingService.done();
+      LoadingService.done();
     }, function () {
-      LoadingService.log();
+      LoadingService.done();
     });
   });
 
 })
 
-.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, KeyboardService, UserAction, focus) {
+.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, FreqService, KeyboardService, UserAction, focus) {
 
   $scope.init = function () {
     focus();
@@ -790,19 +775,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
   };
 
+  $scope.getFreqName = function (freq) {
+    return FreqService.getFreqName(freq);
+  }
+
   $scope.updateMtargetFreq = function () {
-    $scope.mtarget.freq = +$scope.mtarget.freq;
-    if ($scope.mtarget.freq > 86400 * 6) {
-      $scope.mtarget.freq = 0;
-    } else {
-      if ($scope.mtarget.freq === 0) {
-        $scope.mtarget.freq = 43200;
-      } else if ($scope.mtarget.freq === 43200) {
-        $scope.mtarget.freq += 43200;
-      } else {
-        $scope.mtarget.freq += 86400;
-      }
-    }
+    $scope.mtarget.freq = FreqService.getNextFreq($scope.mtarget.freq);
   };
 
   $scope.updateMtargetName = function () {
@@ -877,7 +855,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.$watch(
     function () {
-      return AlertBadgesService.targets().avail;
+      return NotifyService.getCount();
     },
     function (newVal) {
       $scope.badges.prayer = newVal;

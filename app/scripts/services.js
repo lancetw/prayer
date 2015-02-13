@@ -350,13 +350,55 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup) {
+.factory('FreqService', function ($resource, $q, $log, _) {
+  var table = [
+        {name:'一天兩次', val: 43200},
+        {name:'一天', val: 86400},
+        {name:'兩天', val: 86400*2},
+        {name:'三天', val: 86400*3},
+        {name:'四天', val: 86400*4},
+        {name:'五天', val: 86400*5},
+        {name:'六天', val: 86400*6},
+        {name:'七天', val: 86400*7}
+  ];
+
+  return {
+    getTable: function () {
+      return table;
+    },
+    getNextFreq: function (freq) {
+      var index = 0;
+      _.each(table, function (val, name) {
+        if (v === freq) {
+          var obj = table[index % table.length];
+          return obj.val;
+        } else {
+          index++;
+        }
+      });
+    },
+    getFreqName: function (freq) {
+      return _.invert(table)[freq];
+    }
+  };
+})
+
+
+.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup, $exceptionHandler) {
   var badges = 0;
   var reqPermissionCount = 0;
   var maxReqPermissionCount = 3;
 
   return {
     run: function (mtarget_) {
+
+      if (!mtarget_.id) {
+        return function(exception) {
+          exception.message += '沒有 tid';
+          throw exception;
+        };
+      }
+
       if (mtarget_.freq <= 0) {
         return this.cancel(mtarget_.tid);
       }
@@ -394,6 +436,21 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.cancel(tid.toString());
+          if (badges > 0) {
+            badges = badges - 1;
+          }
+        });
+      } catch (err) {}
+    },
+    getCount: function () {
+      return badges;
+    },
+    getScheduledIdsList: function () {
+      try {
+        $cordovaLocalNotification.hasPermission().then(function () {
+          $cordovaLocalNotification.getScheduledIds( function (scheduledIds) {
+            return scheduledIds.join(' ,');
+          });
         });
       } catch (err) {}
     },
@@ -466,6 +523,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     }
   };
 })
+
 
 .factory('LogService', function ($resource, ENV, base64) {
   return {
