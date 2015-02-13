@@ -33,31 +33,86 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   });
 })
 
-.provider('Log', function($provide) {
-  var log = {};
+// base64: http://jasonwatmore.com/post/2014/05/26/AngularJS-Basic-HTTP-Authentication-Example.aspx
+.provider('NgLog', function() {
+  /* jshint ignore:start */
 
-  this.register = function(name, data) {
-    $provide.factory(name, function($window, $log, $q, LogFactory, ConfigService) {
-      var auth = ConfigService.getAuth();
-      if (auth.email) {
-        LogFactory.init(auth);
-        LogFactory.do(data);
+  this.track = function(name, data) {
+    var initInjector = angular.injector(['ng']);
+    var $q = initInjector.get('$q');
+    var $http = initInjector.get('$http');
+
+    var q = $q.defer();
+
+    var settingData = {
+      email: 'ilancetw@icloud.com',
+      uuidx: 'TRACKONLY',
+      type: name,
+      data: JSON.stringify(data),
+      info: 'Global Error Tracking'
+    };
+
+    var input = settingData.email + ':' + settingData.uuidx;
+
+    /* Base64 */
+    var output = '';
+    var keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    var chr1, chr2, chr3 = '';
+    var enc1, enc2, enc3, enc4 = '';
+    var i = 0;
+
+    do {
+      chr1 = input.charCodeAt(i++);
+      chr2 = input.charCodeAt(i++);
+      chr3 = input.charCodeAt(i++);
+
+      enc1 = chr1 >> 2;
+      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+      enc4 = chr3 & 63;
+
+      if (isNaN(chr2)) {
+        enc3 = enc4 = 64;
+      } else if (isNaN(chr3)) {
+        enc4 = 64;
       }
-      var deferred = $q.defer();
-      deferred.resolve(auth);
-      return deferred.promise;
-    });
+
+      output = output +
+        keyStr.charAt(enc1) +
+        keyStr.charAt(enc2) +
+        keyStr.charAt(enc3) +
+        keyStr.charAt(enc4);
+      chr1 = chr2 = chr3 = '';
+      enc1 = enc2 = enc3 = enc4 = '';
+    } while (i < input.length);
+    /* Base64 */
+
+    var authdata = output;
+
+    $http.defaults.headers.common['Authorization'] = 'Basic ' + authdata;
+    $http.post('http://1and1.deliverwork.info/api/v1/logs', settingData).
+      success(function(data, status, headers, config) {
+        $http.defaults.headers.common.Authorization = 'Basic ';
+        q.resolve(data);
+      }).
+      error(function(data, status, headers, config) {
+        $http.defaults.headers.common.Authorization = 'Basic ';
+        q.reject(data);
+      }
+    );
+
+    return q.promise;
   };
 
   this.$get = function() {
-    return function(name) {
-      return log[name];
-    };
+    return this;
   };
+
+  /* jshint ignore:end */
 })
 
 
-.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $provide, $httpProvider, localStorageServiceProvider, ENV, LogProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider, $provide, $httpProvider, localStorageServiceProvider, ENV, NgLogProvider) {
 
   localStorageServiceProvider.setPrefix('Prayer');
 
@@ -83,9 +138,9 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 
       if(ENV.debug) {
         console.log('exception', data);
-        window.alert('Error: '+data.message);
+        window.alert('Error: ' + data.message);
       } else {
-        LogProvider.register('exception', data);
+        NgLogProvider.track('exception', data);
       }
     };
   }]);
@@ -110,7 +165,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
       console.log('exception', data);
       window.alert('Error: '+data.message);
     } else {
-      LogProvider.register('exception', data);
+      NgLogProvider.track('exception', data);
     }
     return stopPropagation;
   };
@@ -126,24 +181,28 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 
     .state('main', {
       url: '/main',
+      params: {action: null},
       templateUrl: 'templates/main.html',
       controller: 'MainCtrl'
     })
 
     .state('location', {
-      url: '/location',
+      url: '/location:',
+      params: {action: null},
       templateUrl: 'templates/location.html',
-      controller: 'LocationCtrl'
+      controller: 'LocationCtrl',
     })
 
     .state('address', {
       url: '/address',
+      params: {action: null},
       templateUrl: 'templates/address.html',
       controller: 'AddressCtrl'
     })
 
     .state('map', {
       url: '/map',
+      params: {action: null},
       templateUrl: 'templates/map.html',
       controller: 'MapCtrl'
     })

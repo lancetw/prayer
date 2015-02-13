@@ -124,56 +124,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
   };
 })
 
-.factory('LogFactory', function ($ionicPlatform, $cordovaDevice, $resource, ENV, $q, DeviceService, ConfigService, LogService) {
-
-  var self = {
-    do: function (type, data) {
-      $ionicPlatform.ready(function () {
-        DeviceService.info().then(function (info) {
-          var q = $q.defer();
-          var auth = ConfigService.getAuth();
-          var drv = LogService.init(auth);
-          var settingData = {
-            email: auth.email,
-            uuidx: auth.uuidx,
-            type: type,
-            data: data,
-            info: info
-          };
-          drv.save(settingData)
-          .$promise.then(function (data) {
-            q.resolve(data);
-          }, function (err) {
-            q.reject(err);
-          });
-
-        }, function () {
-          var q = $q.defer();
-          var auth = ConfigService.getAuth();
-          var drv = LogService.init(auth);
-          var settingData = {
-            email: auth.email,
-            uuidx: auth.uuidx,
-            type: type,
-            data: data,
-            info: 'USER NO LOGIN'
-          };
-          drv.save(settingData)
-          .$promise.then(function (data) {
-            q.resolve(data);
-          }, function (err) {
-            q.reject(err);
-          });
-
-        });
-      });
-    }
-  };
-
-  return self;
-})
-
-
 .factory('DeviceService', function ($ionicPlatform, $q, $cordovaDevice) {
   return {
     detect: function () {
@@ -352,39 +302,46 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 .factory('FreqService', function ($resource, $q, $log, _) {
   var table = [
-        {name:'一天兩次', val: 43200},
-        {name:'一天', val: 86400},
-        {name:'兩天', val: 86400*2},
-        {name:'三天', val: 86400*3},
-        {name:'四天', val: 86400*4},
-        {name:'五天', val: 86400*5},
-        {name:'六天', val: 86400*6},
-        {name:'七天', val: 86400*7}
+    {name:'測試用（十五分鐘）', val: 60*15},
+    {name:'一天兩次', val: 43200},
+    {name:'一天', val: 86400},
+    {name:'兩天', val: 86400*2},
+    {name:'三天', val: 86400*3},
+    {name:'四天', val: 86400*4},
+    {name:'五天', val: 86400*5},
+    {name:'六天', val: 86400*6},
+    {name:'七天', val: 86400*7}
   ];
 
   return {
     getTable: function () {
       return table;
     },
-    getNextFreq: function (freq) {
+    getNextFreq: function (freq_) {
       var index = 0;
-      _.each(table, function (val, name) {
-        if (v === freq) {
-          var obj = table[index % table.length];
-          return obj.val;
+      var freq = 0;
+      _.each(table, function (item) {
+        if (item.val === freq_) {
+          freq = table[(index+1) % table.length].val;
         } else {
           index++;
         }
       });
+      return freq;
     },
     getFreqName: function (freq) {
-      return _.invert(table)[freq];
+      var item = _.find(table, function (item) {
+        return item.val === freq;
+      });
+      if (item) {
+        return item.name;
+      }
     }
   };
 })
 
 
-.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup, $exceptionHandler) {
+.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup) {
   var badges = 0;
   var reqPermissionCount = 0;
   var maxReqPermissionCount = 3;
@@ -393,10 +350,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     run: function (mtarget_) {
 
       if (!mtarget_.id) {
-        return function(exception) {
-          exception.message += '沒有 tid';
-          throw exception;
-        };
+        $ionicPopup.alert({
+          title: '新增失敗',
+          template: '沒有這個禱告對象'
+        });
       }
 
       if (mtarget_.freq <= 0) {
@@ -404,8 +361,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       }
 
       var now = new Date().getTime();
-      var title = '一領一禱告認領';
-      var message = '你已經有' + (mtarget_.freq / (60*60*24)) + '天沒有為' + mtarget_.name + '禱告囉！';
+      var title = '禱告提醒';
+      var days = mtarget_.freq > 43200 ? (mtarget_.freq / (60*60*24)) : '半';
+      var message = mtarget_.freq >=43200 ? '您已經有' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經有' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
       var date = new Date(now + 1000 * mtarget_.freq);
 
       try {
@@ -413,7 +371,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           badges = badges + 1;
 
           $cordovaLocalNotification.add({
-            id:         mtarget_.tid,
+            id:         mtarget_.id,
             date:       date,
             message:    message,
             title:      title,
@@ -446,13 +404,32 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return badges;
     },
     getScheduledIdsList: function () {
+      var q = $q.defer();
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
-          $cordovaLocalNotification.getScheduledIds( function (scheduledIds) {
-            return scheduledIds.join(' ,');
+          $cordovaLocalNotification.getScheduledIds().then(function (scheduledIds) {
+            q.resolve(scheduledIds);
           });
         });
-      } catch (err) {}
+      } catch (err) {
+        q.reject(err);
+      }
+
+      return q.promise;
+    },
+    getTriggeredIds: function () {
+      var q = $q.defer();
+      try {
+        $cordovaLocalNotification.hasPermission().then(function () {
+          $cordovaLocalNotification.getTriggeredIds().then(function (triggeredIds) {
+            q.resolve(triggeredIds);
+          });
+        });
+      } catch (err) {
+        q.reject(err);
+      }
+
+      return q.promise;
     },
     purge: function () {
       try {
@@ -468,8 +445,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         $cordovaLocalNotification.promptForPermission();
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
-          //badges = 0;
-          //$cordovaLocalNotification.cancelAll();
         });
       } catch (err) {}
     }
