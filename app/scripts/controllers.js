@@ -164,7 +164,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       LoadingService.done();
 
       if ($scope.map.total === 0) {
-        LoadingService.message('尚無資料');
+        LoadingService.msg('尚無資料');
       }
 
     }, function (err) {
