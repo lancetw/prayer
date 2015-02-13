@@ -34,13 +34,14 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 })
 
 // base64: http://jasonwatmore.com/post/2014/05/26/AngularJS-Basic-HTTP-Authentication-Example.aspx
-.provider('NgLog', function() {
+.provider('NgLog', function () {
   /* jshint ignore:start */
 
   this.track = function(name, data) {
     var initInjector = angular.injector(['ng']);
     var $q = initInjector.get('$q');
     var $http = initInjector.get('$http');
+    var LOGGER_SERVER = 'http://1and1.deliverwork.info/api/v1/';
 
     var q = $q.defer();
 
@@ -90,7 +91,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     var authdata = output;
 
     $http.defaults.headers.common['Authorization'] = 'Basic ' + authdata;
-    $http.post('http://1and1.deliverwork.info/api/v1/logs', settingData).
+    $http.post(LOGGER_SERVER + 'logs', settingData).
       success(function(data, status, headers, config) {
         $http.defaults.headers.common.Authorization = 'Basic ';
         q.resolve(data);
@@ -213,6 +214,13 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
       controller: 'MtargetCtrl'
     })
 
+    .state('reset-church', {
+      url: '/resetchurch',
+      params: {action: null},
+      templateUrl: 'templates/reset-church.html',
+      controller: 'ResetChurchCtrl'
+    })
+
     .state('tab', {
       url: '/tab',
       abstract: true,
@@ -221,6 +229,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 
     .state('tab.prayer-index', {
       url: '/prayer',
+      params: {action: null},
       views: {
         'tab-prayer': {
           templateUrl: 'templates/prayer-index.html',

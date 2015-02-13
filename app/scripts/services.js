@@ -110,7 +110,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       });
     },
     log: function (err) {
-      $log.warn(err);
+      $log.warn('錯誤提示：', err);
       // TODO 記錄到伺服器
       $ionicLoading.show({
         template: '發生錯誤，請重試',
@@ -302,7 +302,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 .factory('FreqService', function ($resource, $q, $log, _) {
   var table = [
-    {name:'測試用（十五分鐘）', val: 60*15},
+    {name:'尚未設定', val: 0},
+    {name:'測試用（15分鐘）', val: 60*15},
     {name:'一天兩次', val: 43200},
     {name:'一天', val: 86400},
     {name:'兩天', val: 86400*2},
@@ -391,6 +392,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       } catch (err) {}
     },
     cancel: function (tid) {
+      if (!tid) {
+        return;
+      }
+
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.cancel(tid.toString());

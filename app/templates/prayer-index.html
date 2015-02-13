@@ -25,7 +25,7 @@
     </div>
 
     <ion-list on-hold="data.showReorder = !data.showReorder; data.showDelete = false" show-reorder="data.showReorder" show-delete="false">
-      <ion-item item="mtarget" class="item-icon-right item-remove-animate" ng-repeat="mtarget in mtargets track by $index" href="#/tab/prayer/{{mtarget.id}}">
+      <ion-item item="mtarget" class="item-icon-right item-remove-animate" ng-repeat="mtarget in mtargets track by $index" href="#/tab/prayer/{{mtarget.id}}" nav-direction="forward">
 
         <i class="icon ion-chevron-right icon-accessory"></i>
 
@@ -47,7 +47,7 @@
           </div>
         </div>
 
-        <ion-delete-button class="ion-minus-circled" ng-click="mtargets.splice($index, 1); removeMtarget(mtarget.id)">
+        <ion-delete-button class="ion-minus-circled" ng-click="removeMtargetConfirm($index, mtarget.name, mtarget.id)">
         </ion-delete-button>
 
         <ion-reorder-button class="ion-navicon" on-reorder="moveItem(mtarget, $fromIndex, $toIndex)">

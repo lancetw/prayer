@@ -1,6 +1,6 @@
 <ion-view cache-view="false" hide-back-button="false" title="一領一禱告認領">
   <ion-nav-buttons side="right"></ion-nav-buttons>
-  <ion-content>
+  <ion-content class="bg-dark" padding="true">
     <form>
     <ion-item ng-if="map.item.ocname && block.church" class="item-light text-center">
       <h2>{{map.item.ocname}}</h2>
@@ -25,7 +25,7 @@
         我同意使用者條款
       </ion-checkbox>-->
 
-      <button ng-disabled="!(!!user.email)" ng-click="register()" class="button button-dark button-block">開始使用</button>
+      <button ng-disabled="!(!!user.email)" ng-click="register()" class="button button-positive button-block">開始使用</button>
 
       <button ng-click="toIntro()" class="button button-light button-block">取消</button>
     </div>

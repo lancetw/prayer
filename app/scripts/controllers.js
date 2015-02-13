@@ -11,7 +11,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     DeviceService.detect()
     .then(function (uuid) {
       if (auth && auth.uuidx === uuid) {
-        $state.go('tab.prayer-index');
+        $state.go('tab.prayer-index', {}, {reload: true, cache: false});
       } else {
         ConfigService.purge();
         LoadingService.done();
@@ -19,7 +19,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }, function () {
       var uuid = 'TESTONLY';
       if (auth && auth.uuidx === uuid) {
-        $state.go('tab.prayer-index');
+        $state.go('tab.prayer-index', {}, {reload: true, cache: false});
       } else {
         ConfigService.purge();
         LoadingService.done();
@@ -69,7 +69,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       ConfigService.setMap($scope.map);
 
       if ($scope.map.lat && $scope.map.lng) {
-        $timeout(function () { $state.go('map', $stateParams); }, 200);
+        $timeout(function () {
+          $state.go('map', $stateParams);
+        }, 200);
       } else {
         LoadingService.log();
       }
@@ -78,15 +80,25 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         title: '無法取得 GPS 資訊',
         template: err.message_
       });
-      $timeout(function () { $state.go('address', $stateParams); }, 200);
+      $timeout(function () {
+        $state.go('address', $stateParams);
+      }, 200);
     });
   };
 
-  $scope.toAddress = function() {
+  $scope.showLogin = function () {
+    if ($stateParams && $stateParams.action === 'changeChurch') {
+      $scope.showLoginIsNeeded = false;
+    } else {
+      $scope.showLoginIsNeeded = true;
+    }
+  };
+
+  $scope.toAddress = function () {
     $state.go('address', $stateParams);
   };
 
-  $scope.toMain = function() {
+  $scope.toMain = function () {
     ConfigService.purge();
     $state.go('main');
   };
@@ -96,6 +108,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $ionicPlatform.ready(function () {
+    $scope.showLogin();
     $scope.GPS();
   });
 
@@ -164,7 +177,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       LoadingService.done();
 
       if ($scope.map.total === 0) {
-        LoadingService.msg('尚無資料');
+        LoadingService.msg($scope.map.city + $scope.map.town + '尚無資料。');
       }
 
     }, function (err) {
@@ -177,7 +190,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     if (!$scope.modalIsOpening) {
       return false;
     }
-    if ($scope.map.total > $scope.map.items.length) {
+    if ($scope.map && $scope.map.items && ($scope.map.total > $scope.map.items.length)) {
       return true;
     } else {
       return false;
@@ -196,7 +209,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     ConfigService.setMap($scope.map);
 
     if ($stateParams && $stateParams.action === 'changeChurch') {
-      $state.go('main', $stateParams);
+      $state.go('reset-church', $stateParams);
     } else {
       $state.go('mtarget');
     }
@@ -287,7 +300,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.moreDataCanBeLoaded = function () {
-    if ($scope.map.total > $scope.map.items.length) {
+    if ($scope.map && $scope.map.items && ($scope.map.total > $scope.map.items.length)) {
       return true;
     } else {
       return false;
@@ -300,7 +313,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     ConfigService.setMap($scope.map);
 
     if ($stateParams && $stateParams.action === 'changeChurch') {
-      $state.go('main', $stateParams);
+      $state.go('reset-church', $stateParams);
     } else {
       $state.go('mtarget');
     }
@@ -325,7 +338,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.mtarget = {};
       $scope.mtarget.sinner = false;
       $scope.mtarget.freqs = FreqService.getTable();
-      $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
+      $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
 
       q.resolve($scope.mtarget);
 
@@ -359,6 +372,33 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
+
+.controller('ResetChurchCtrl', function ($scope, $state, $stateParams, $timeout, $ionicHistory, ConfigService, UserAction, LoadingService) {
+
+  $scope.saveChurch = function () {
+    $scope.auth = ConfigService.getAuth();
+    $scope.map = ConfigService.getMap();
+    UserAction.setAuth($scope.auth);
+    UserAction.joinChurch($scope.map).then(function () {
+      $ionicHistory.clearCache();
+      $ionicHistory.clearHistory();
+      $timeout(function () {
+        $state.go('tab.prayer-index', $stateParams, {reload: true, cache: false});
+      }, 1000);
+    }, function (err) {
+      LoadingService.log(err);
+      $state.go('location', $stateParams);
+    });
+  };
+
+  if ($stateParams && $stateParams.action === 'changeChurch') {
+    $scope.saveChurch();
+  }
+
+
+})
+
+
 .controller('MainCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $timeout, $log, $q, $location, $ionicHistory, ConfigService, DeviceService, NotifyService, KeyboardService, MtargetsService, LoadingService, UserAction) {
 
   $scope.init = function () {
@@ -379,14 +419,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         church: false,
         mtarget: false
       };
-
-      if ($stateParams && $stateParams.action === 'changeChurch') {
-        UserAction.joinChurch($scope.map).then(function () {
-          $state.go('tab.prayer-index');
-        }, function (err) {
-          LoadingService.log(err);
-        });
-      }
 
       if ($scope.map && $scope.map.item.hasOwnProperty('ocname')) {
         $scope.block.church = true;
@@ -429,7 +461,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         email: $scope.user.email,
         uuidx: $scope.device.uuid
       };
-
       UserAction.setAuth($scope.auth);
 
       if ($scope.map && $scope.map.item && $scope.map.item.hasOwnProperty('ocname') && $scope.mtarget.name && $stateParams.action !== 'changeChurch') {
@@ -463,8 +494,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.Login = function () {
     ConfigService.setAuth($scope.auth);
     MtargetsService.clean();
-
-    $state.go('tab.prayer-index');
+    $state.go('tab.prayer-index', {}, {reload: true, cache: false});
   };
 
   $scope.toIntro = function () {
@@ -476,7 +506,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory,ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -502,10 +532,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.auth = ConfigService.getAuth();
       $scope.church = ConfigService.getChurch();
 
-      if (!$scope.church) {
+      if (!$scope.church || ($stateParams && $stateParams.action === 'changeChurch')) {
+        $scope.church = '';
         $scope.showChurch().then(function () {}, function () {
           ConfigService.purge();
-          $state.go('intro', {}, {reload: true});
+          $ionicHistory.clearCache();
+          $ionicHistory.clearHistory();
+          $state.go('intro', {}, {cache: false, reload: true});
         });
       }
 
@@ -539,16 +572,15 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.resetChurch = function () {
-
     var confirmPopup = $ionicPopup.confirm({
-      title: '請確認',
+      title: '更換教會確認',
       template: '確定要更換教會？',
       okText: '我確定',
       cancelText: '取消'
     });
     confirmPopup.then(function(res) {
       if(res) {
-        $state.go('location', {action: 'changeChurch'});
+        $state.go('location', {action: 'changeChurch'}, {cache: false, reload: true});
       }
     });
   };
@@ -568,7 +600,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.openChurchModal = function () {
-    $scope.scheduledIds = NotifyService.getScheduledIdsList().joins(', ');
+    NotifyService.getScheduledIdsList().then(function (list) {
+      $scope.scheduledIds = list;
+    });
+
     $scope.churchModal.show();
   };
 
@@ -580,7 +615,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.mtarget = {};
     $scope.mtarget.sinner = false;
     $scope.mtarget.freqs = FreqService.getTable();
-    $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
+    $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
 
     $scope.modal.show();
   };
@@ -620,6 +655,21 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
   };
 
+  $scope.removeMtargetConfirm = function (index, name, tid) {
+    var confirmPopup = $ionicPopup.confirm({
+      title: '刪除禱告對象確認',
+      template: '確定要刪除「' + name + '」？',
+      okText: '我確定',
+      cancelText: '取消'
+    });
+    confirmPopup.then(function(res) {
+      if(res) {
+        $scope.mtargets.splice(index, 1);
+        $scope.removeMtarget(tid);
+      }
+    });
+  };
+
   $scope.removeMtarget = function (tid) {
     var settingData = {
       id: tid
@@ -627,7 +677,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var drv = MtargetsService.init($scope.auth);
     if (!$scope.mtargets || $scope.mtargets.length === 0) {
       $scope.showDeleteState = false;
-      NotifyService.purge();
       $ionicListDelegate.showDelete($scope.showDeleteState);
     }
     MtargetsService.remove(tid);
@@ -635,9 +684,16 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     drv.delete(settingData)
     .$promise.then(function () {
       NotifyService.cancel(tid);
+      if (!$scope.mtargets || $scope.mtargets.length === 0) {
+        NotifyService.purge();
+      }
+
       $scope.checkEmptyTips();
     }, function (err) {
       LoadingService.log(err);
+      if (!$scope.mtargets || $scope.mtargets.length === 0) {
+        NotifyService.purge();
+      }
     });
   };
 
@@ -689,7 +745,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     try {
       if (force) {
         $scope.mtargets_ = angular.copy($scope.mtargets);
-        ConfigService.clearMtarget();
+        MtargetsService.clean();
       }
 
       $scope.now = moment();
@@ -699,7 +755,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $scope.mtargets = ConfigService.getMtarget();
 
-      if (!$scope.mtargets) {
+      if (!$scope.mtargets || $scope.mtargets === null) {
         $scope.mtargets = MtargetsService.all($scope.auth, function () {
 
           // 合併新舊資料
@@ -782,7 +838,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, FreqService, KeyboardService, UserAction, focus) {
+.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicHistory, $ionicPlatform, $location, $log, $q, MtargetsService, LoadingService, ConfigService, FreqService, KeyboardService, UserAction, focus) {
 
   $scope.init = function () {
     focus();
@@ -823,8 +879,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.init();
   if (!$scope.mtarget) {
-
-    $state.go('intro', {}, {reload: true});
+    $ionicHistory.clearCache();
+    $ionicHistory.clearHistory();
+    $state.go('intro', {}, {cache: false, reload: true});
   }
 
 })
@@ -846,7 +903,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
 
-    $state.go('intro', {}, {reload: true});
+    $ionicHistory.clearCache();
+    $ionicHistory.clearHistory();
+    $state.go('intro', {}, {cache: false, reload: true});
   };
 
   $ionicPlatform.ready(function () {

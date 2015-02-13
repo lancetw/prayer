@@ -62,6 +62,17 @@
   }
 }
 
+.bg-dark {
+  color: $light;
+  background: $dark;
+
+  .button-dark {
+    color: $light;
+    background-color: rgba(0, 0, 0, .3);
+    border-color: rgba(0, 0, 0, .3);
+  }
+}
+
 .item-enter.ng-animate {
   transition: 0s none;
   -webkit-transition: 0s none;

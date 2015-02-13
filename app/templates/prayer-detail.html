@@ -11,12 +11,12 @@
 
     <div class="list card">
 
-      <a event-focus="click" event-focus-id="inputMtargetName" ng-class="{true: 'hide', false: 'show'}[showModifyMtargetName]" ng-show="!!showModifyMtargetName === false" class="item-enter item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
+      <a event-focus="click" event-focus-id="inputMtargetName" ng-show="!!showModifyMtargetName === false" class="item-enter item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
         <i class="icon ion-person-add"></i>
         <span>{{ mtarget.name }}</span>
       </a>
 
-      <div ng-class="{true: 'show', false: 'hide'}[showModifyMtargetName]" ng-show="!!showModifyMtargetName === true" class="item-enter item item-icon-left">
+      <div ng-show="!!showModifyMtargetName === true" class="item-enter item item-icon-left">
         <i class="icon ion-person-add"></i>
         <input id="inputMtargetName" type="text" class="itemInput" placeholder="輸入新的名稱" ng-model="mtarget.name" ng-blur="showModifyMtargetName = false">
       </div>
@@ -49,7 +49,7 @@
 
   </ion-content>
   <ion-footer-bar ng-hide="!(!!mtarget.name)" class="bar mtarget">
-    <button type="submit" class="button button-clear button-full" href="#">回到列表</button>
+    <button type="submit" class="button button-clear button-full" href="#" nav-direction="back">回到列表</button>
   </ion-footer-bar>
   </form>
 

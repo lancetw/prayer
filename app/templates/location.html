@@ -1,6 +1,6 @@
 <ion-view hide-back-button="true" title="選擇教會所在地">
   <ion-nav-buttons side="right"></ion-nav-buttons>
-  <ion-content class="padding-bottom">
+  <ion-content class="padding-bottom bg-dark" padding="true">
 
     <div class="list padding-top">
       <button class="button button-full button-assertive" ng-click="rerun()">
@@ -11,8 +11,8 @@
       </button>
     </div>
 
-    <div class="list">
-      <button ng-click="toMain()" class="button button-full button-stable">我已經是守望者</button>
+    <div class="list" ng-model="showLoginIsNeeded" ng-if="showLoginIsNeeded">
+      <button ng-click="toMain()" class="button button-full button-dark">我已經是守望者</button>
     </div>
 
   </ion-content>
