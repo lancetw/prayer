@@ -363,8 +363,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.cancel(tid.toString());
-          if (badges > 0) {
-            badges = badges - 1;
+          if (self.getCount() > 0) {
+            self.setCount(self.getCount() - 1);
           }
           self.notifyCancel(tid);
         });
@@ -395,14 +395,14 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
-          badges = badges + 1;
+          self.setCount(self.getCount() + 1);
 
           $cordovaLocalNotification.add({
             id:         mtarget_.id,
             date:       date,
             message:    message,
             title:      title,
-            badge:      badges,
+            badge:      self.getCount(),
             repeat:     repeatType
           });
 
@@ -419,8 +419,23 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         });
       } catch (err) {}
     },
+    setCount: function (count) {
+      try {
+        $cordovaBadge.hasPermission().then(function(yes) {
+          cordova.plugins.notification.badge.set(count);
+          badges = count;
+        }, function(no) {});
+      } catch (err) {}
+    },
     getCount: function () {
-      return badges;
+      try {
+        $cordovaBadge.hasPermission().then(function(yes) {
+          cordova.plugins.notification.badge.get(function (count) {
+            badges = +count;
+            return badges;
+          });
+        }, function(no) {});
+      } catch (err) {}
     },
     getNotifyList: function () {
       return notifyList;
@@ -461,9 +476,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         });
       } catch (err) {}
     },
-    clearIconBadges: function () {
+    clearCount: function () {
       try {
         $cordovaBadge.hasPermission().then(function(yes) {
+          badges = 0;
           $cordovaBadge.clear();
         }, function(no) {});
       } catch (err) {}

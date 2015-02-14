@@ -497,6 +497,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.Login = function () {
     ConfigService.setAuth($scope.auth);
     MtargetsService.clean();
+    NotifyService.purge();
     $ionicHistory.clearCache();
     $ionicHistory.clearHistory();
     $timeout(function () {
@@ -586,13 +587,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       };
 
     $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
-    .then( function (event) {
-        // success
-    })
-    .catch (function (event) {
-      // error
-    }
-    );
+    .then( function () {})
+    .catch (function () {});
 
   };
 
@@ -628,6 +624,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     NotifyService.getScheduledIdsList().then(function (list) {
       $scope.scheduledIds = list;
     });
+
+    $scope.notifyCount = NotifyService.getCount();
 
     $scope.churchModal.show();
   };
