@@ -510,7 +510,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, $cordovaInAppBrowser, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory,ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -576,20 +576,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.openDonationModal = function () {
-    var options = {
-        location: 'no',
-        clearcache: 'yes',
-        toolbar: 'yes'
-      };
-
-    $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
-    .then( function (event) {
-        // success
-    })
-    .catch (function (event) {
-      // error
-    }
-    );
 
   };
 
@@ -871,7 +857,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.auth = ConfigService.getAuth();
       $scope.mtarget = MtargetsService.item($stateParams.mtargetId);
       $scope.mtarget.freqName = FreqService.getFreqName($scope.mtarget.freq);
-      console.log($scope.mtarget.freqName);
       q.resolve($scope.mtarget);
     } catch (err) {
       q.reject(err);
@@ -923,11 +908,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('AboutsCtrl', function ($ionicPlatform, $ionicScrollDelegate, $ionicHistory, $scope, $state, NotifyService, ConfigService) {
+.controller('AboutsCtrl', function ($ionicPlatform, $ionicScrollDelegate, $ionicHistory, $scope, $state, ConfigService) {
   $scope.doLogout = function () {
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
-    NotifyService.purge();
+
     $ionicHistory.clearCache();
     $ionicHistory.clearHistory();
     $state.go('intro', {}, {cache: false, reload: true});
