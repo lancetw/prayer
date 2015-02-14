@@ -342,7 +342,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup) {
+.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaBadge, $cordovaLocalNotification, $ionicPopup) {
   var badges = 0;
   var notifyList = [];
   var reqPermissionCount = 0;
@@ -461,12 +461,21 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         });
       } catch (err) {}
     },
+    clearIconBadges: function () {
+      try {
+        $cordovaBadge.hasPermission().then(function(yes) {
+          $cordovaBadge.clear();
+        }, function(no) {});
+      } catch (err) {}
+    },
     init: function () {
       try {
         // TODO 檢查新版本的變化
         $cordovaLocalNotification.promptForPermission();
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
+
+          $cordovaBadge.configure({ autoClear: true });
 
           $cordovaLocalNotification.ontrigger = function (id, state, json) {
             self.notifyAdd(id);
@@ -628,14 +637,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         return newList;
       }
 
-      newList = _.each(oldList, function (oldone) {
-        var newone = _.filter(newList, {id: oldone.id})[0];
-        newone.keep = oldone.keep;
-        newone.past = oldone.past;
-        newone.status = oldone.status;
+      var newList_ = _.each(newList, function (newone) {
+        var oldone = _.filter(oldList, {id: newone.id})[0];
+        if (oldone) {
+          newone.keep = oldone.keep;
+          newone.past = oldone.past;
+          newone.status = oldone.status;
+        }
       });
 
-      items = newList;
+      items = newList_;
 
       ConfigService.setMtarget(JSON.stringify(items));
 

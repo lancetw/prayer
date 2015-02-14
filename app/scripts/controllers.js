@@ -784,7 +784,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       if (!$scope.mtargets || $scope.mtargets === null) {
         $scope.mtargets = MtargetsService.all($scope.auth, function () {
-
           // 合併新舊資料
           if ($scope.mtargets_) {
             $scope.mtargets = MtargetsService.merge($scope.mtargets, $scope.mtargets_);
