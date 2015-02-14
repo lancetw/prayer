@@ -871,7 +871,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.auth = ConfigService.getAuth();
       $scope.mtarget = MtargetsService.item($stateParams.mtargetId);
       $scope.mtarget.freqName = FreqService.getFreqName($scope.mtarget.freq);
-      console.log($scope.mtarget.freqName);
+
       q.resolve($scope.mtarget);
     } catch (err) {
       q.reject(err);
