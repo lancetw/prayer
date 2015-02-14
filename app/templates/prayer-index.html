@@ -15,7 +15,7 @@
     <div class="button-bar" ng-model="menuIsActive" ng-if="menuIsActive">
       <button class="button button-clear button-positive" ng-click="resetChurch()">更換教會</button>
       <button class="button button-clear button-positive" ng-click="openChurchModal()">統計資訊</button>
-      <!--<button class="button button-clear button-positive" ng-click="">回報錯誤</button>-->
+      <button class="button button-clear button-positive" ng-click="openDonationModal()">奉獻連結</button>
     </div>
 
     <div ng-model="showEmptyTips" ng-if="showEmptyTips" ng-class="{true: 'show', false: 'hide'}[showEmptyTips]">

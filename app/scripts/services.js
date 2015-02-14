@@ -344,52 +344,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 .factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaLocalNotification, $ionicPopup) {
   var badges = 0;
+  var notifyList = [];
   var reqPermissionCount = 0;
   var maxReqPermissionCount = 3;
 
-  return {
-    run: function (mtarget_) {
-
-      if (!mtarget_.id) {
-        $ionicPopup.alert({
-          title: '新增失敗',
-          template: '沒有這個禱告對象'
-        });
-      }
-
-      if (mtarget_.freq <= 0) {
-        return this.cancel(mtarget_.tid);
-      }
-
-      var now = new Date().getTime();
-      var title = '禱告提醒';
-      var days = mtarget_.freq > 43200 ? (mtarget_.freq / (60*60*24)) : '半';
-      var message = mtarget_.freq >=43200 ? '您已經有' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經有' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
-      var date = new Date(now + 1000 * mtarget_.freq);
-
-      try {
-        $cordovaLocalNotification.hasPermission().then(function () {
-          badges = badges + 1;
-
-          $cordovaLocalNotification.add({
-            id:         mtarget_.id,
-            date:       date,
-            message:    message,
-            title:      title,
-            badge:      badges,
-            repeat:     'daily'
-          });
-
-        }, function () {
-          reqPermissionCount = reqPermissionCount + 1;
-          if (reqPermissionCount <= maxReqPermissionCount) {
-            $ionicPopup.alert({
-              title: '需要開啟通知權限',
-              template: '請開啟一領一禱告認領的通知權限（超過三次將不再提醒）'
-            });
-          }
-        });
-      } catch (err) {}
+  var self = {
+    notfiyAdd: function (tid) {
+      return tid;
+    },
+    notifyCancel: function (tid) {
+      return tid;
     },
     cancel: function (tid) {
       if (!tid) {
@@ -402,11 +366,64 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           if (badges > 0) {
             badges = badges - 1;
           }
+          self.notifyCancel(tid);
+        });
+      } catch (err) {}
+    },
+    run: function (mtarget_) {
+
+      if (!mtarget_.id) {
+        $ionicPopup.alert({
+          title: '新增失敗',
+          template: '沒有這個禱告對象'
+        });
+      }
+
+      if (mtarget_.freq <= 0) {
+        return self.cancel(mtarget_.tid);
+      }
+
+      var now = new Date().getTime();
+      var title = '禱告提醒';
+      var days = mtarget_.freq > 43200 ? (mtarget_.freq / (60*60*24)) : '半';
+      var message = mtarget_.freq >=43200 ? '您已經有' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經有' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
+      var date = new Date(now + 1000 * mtarget_.freq);
+      var repeatType = mtarget_.freq >= 43200 ? 'hourly' : 'minutely';
+      if (mtarget_.freq >= 86400) {
+        repeatType = 'daily';
+      }
+
+      try {
+        $cordovaLocalNotification.hasPermission().then(function () {
+          badges = badges + 1;
+
+          $cordovaLocalNotification.add({
+            id:         mtarget_.id,
+            date:       date,
+            message:    message,
+            title:      title,
+            badge:      badges,
+            repeat:     repeatType
+          });
+
+          self.notifyCancel(mtarget_.id);
+
+        }, function () {
+          reqPermissionCount = reqPermissionCount + 1;
+          if (reqPermissionCount <= maxReqPermissionCount) {
+            $ionicPopup.alert({
+              title: '需要開啟通知權限',
+              template: '請開啟一領一禱告認領的通知權限（超過三次將不再提醒）'
+            });
+          }
         });
       } catch (err) {}
     },
     getCount: function () {
       return badges;
+    },
+    getNotifyList: function () {
+      return notifyList;
     },
     getScheduledIdsList: function () {
       var q = $q.defer();
@@ -450,10 +467,17 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         $cordovaLocalNotification.promptForPermission();
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
+
+          $cordovaLocalNotification.ontrigger = function (id, state, json) {
+            self.notifyAdd(id);
+          };
+
         });
       } catch (err) {}
     }
   };
+
+  return self;
 })
 
 
@@ -567,7 +591,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
   var items = {};
 
-  return {
+  var self = {
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
       return $resource(ENV.apiEndpoint + 'targets/:id', {id: '@id'},
@@ -580,7 +604,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       );
     },
     all: function (token, func) {
-      items = this.init(token).query(func);
+      items = self.init(token).query(func);
       return items;
     },
     update: function (mtargets) {
@@ -618,6 +642,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return items;
     }
   };
+
+  return self;
 })
 
 

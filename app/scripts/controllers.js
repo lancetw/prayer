@@ -494,7 +494,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.Login = function () {
     ConfigService.setAuth($scope.auth);
     MtargetsService.clean();
-    $state.go('tab.prayer-index', {}, {reload: true, cache: false});
+    $ionicHistory.clearCache();
+    $ionicHistory.clearHistory();
+    $timeout(function () {
+      $state.go('tab.prayer-index', $stateParams, {reload: true, cache: false});
+    }, 1000);
   };
 
   $scope.toIntro = function () {
@@ -571,6 +575,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
   };
 
+  $scope.openDonationModal = function () {
+
+  };
+
   $scope.resetChurch = function () {
     var confirmPopup = $ionicPopup.confirm({
       title: '更換教會確認',
@@ -630,6 +638,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     LoadingService.loading();
     UserAction.setAuth($scope.auth);
     UserAction.addMtarget($scope.mtarget).then(function (data) {
+
       $scope.mtarget = data;
       $scope.mtarget.status = true;
       $scope.mtarget.past = 0;
@@ -638,6 +647,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.mtarget.meeter = 0;
       $scope.mtargets.unshift($scope.mtarget);
       $scope.tracking($scope.mtarget);
+      $scope.checkEmptyTips();
 
       LoadingService.msg('新增完成');
       $scope.closeMtargetModal();
@@ -645,7 +655,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       MtargetsService.update($scope.mtargets);
       NotifyService.run($scope.mtarget);
       LoadingService.done();
-      $scope.checkEmptyTips();
+
     }, function (err) {
       if (+err.status === 302) {
         LoadingService.error('重複的禱告對象');
