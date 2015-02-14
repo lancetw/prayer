@@ -625,7 +625,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.scheduledIds = list;
     });
 
-    $scope.notifyCount = NotifyService.getCount();
+    NotifyService.getCount().then(function (count) {
+      $scope.notifyCount = count;
+    });
 
     $scope.churchModal.show();
   };
@@ -665,6 +667,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.checkEmptyTips();
 
       LoadingService.msg('新增完成');
+
       $scope.closeMtargetModal();
       $ionicScrollDelegate.scrollTop();
       MtargetsService.update($scope.mtargets);
@@ -733,7 +736,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       var item = MtargetsService.item($scope.action.tid);
       item.status = false;
       item.past = new Date();
-      NotifyService.cancel(item.id);
       NotifyService.run(item);
 
       MtargetsService.update($scope.mtargets);
