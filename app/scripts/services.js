@@ -359,14 +359,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           if (badges > 0) {
             badges = badges - 1;
           }
-          /*self.getCount().then(function (count) {
-            if (count > 0) {
-              self.setCount(tid, count - 1);
-            } else {
-              self.clearCount();
-            }
-          });*/
-
         });
       } catch (err) {}
     },
@@ -399,7 +391,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           $cordovaLocalNotification.isScheduled(mtarget_.id).then(function (isScheduled) {
             if (!isScheduled) {
               badges = badges + 1;
-              //self.setCount(mtarget_.id, count);
             }
 
             $cordovaLocalNotification.add({
@@ -422,33 +413,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           }
         });
       } catch (err) {}
-    },
-    setCount: function (tid, count) {
-      var q = $q.defer();
-      try {
-        $cordovaBadge.hasPermission().then(function (yes) {
-          $cordovaBadge.set(count);
-          badges = count;
-          q.resolve(badges);
-        }, function(no) {});
-      } catch (err) {
-        q.reject(err);
-      }
-
-      return q.promise;
-    },
-    getCount: function () {
-      var q = $q.defer();
-      try {
-        $cordovaBadge.hasPermission().then(function(yes) {
-          //badges = $cordovaBadge.get();
-          q.resolve(badges);
-        }, function(no) {});
-      } catch (err) {
-        q.reject(err);
-      }
-
-      return q.promise;
     },
     getScheduledIdsList: function () {
       var q = $q.defer();
