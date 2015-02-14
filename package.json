@@ -1,6 +1,6 @@
 {
   "name": "Prayer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "dependencies": {},
   "devDependencies": {
@@ -55,7 +55,6 @@
     "org.apache.cordova.device",
     "https://git-wip-us.apache.org/repos/asf/cordova-plugin-device.git",
     "de.appplant.cordova.plugin.local-notification@0.7.8",
-    "org.apache.cordova.console",
     "org.apache.cordova.inappbrowser"
   ]
 }

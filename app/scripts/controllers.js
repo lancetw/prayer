@@ -1,19 +1,21 @@
 'use strict';
 angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
-.controller('IntroCtrl', function ($scope, $state, $ionicSlideBoxDelegate, $ionicPlatform, $ionicNavBarDelegate, $q, DeviceService, ConfigService, LoadingService) {
+.controller('IntroCtrl', function ($scope, $state, $ionicSlideBoxDelegate, $ionicPlatform, $ionicNavBarDelegate, $q, DeviceService, ConfigService, LoadingService, NotifyService) {
 
   var auth = ConfigService.getAuth();
   $ionicNavBarDelegate.showBackButton(false);
 
   $scope.Device = function () {
     LoadingService.loading();
+
     DeviceService.detect()
     .then(function (uuid) {
       if (auth && auth.uuidx === uuid) {
         $state.go('tab.prayer-index', {}, {reload: true, cache: false});
       } else {
         ConfigService.purge();
+        NotifyService.purge();
         LoadingService.done();
       }
     }, function () {
@@ -22,6 +24,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         $state.go('tab.prayer-index', {}, {reload: true, cache: false});
       } else {
         ConfigService.purge();
+        NotifyService.purge();
         LoadingService.done();
       }
     });
