@@ -386,7 +386,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       var now = new Date().getTime();
       var title = '禱告提醒';
       var days = mtarget_.freq > 43200 ? (mtarget_.freq / (60*60*24)) : '半';
-      var message = mtarget_.freq >=43200 ? '您已經有' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經有' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
+      var message = mtarget_.freq >=43200 ? '您已經超過' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經超過' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
       var date = new Date(now + 1000 * mtarget_.freq);
       var repeatType = mtarget_.freq >= 43200 ? 'daily' : 'hourly';
       if (mtarget_.freq >= 86400) {
