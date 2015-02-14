@@ -396,22 +396,19 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
 
-          self.getCount().then(function (count) {
-            $cordovaLocalNotification.isScheduled(mtarget_.id).then(function (isScheduled) {
-              if (!isScheduled) {
-                badges = badges + 1;
-                //self.setCount(mtarget_.id, count);
-              }
+          $cordovaLocalNotification.isScheduled(mtarget_.id).then(function (isScheduled) {
+            if (!isScheduled) {
+              badges = badges + 1;
+              //self.setCount(mtarget_.id, count);
+            }
 
-              $cordovaLocalNotification.add({
-                id:         mtarget_.id,
-                date:       date,
-                message:    message,
-                title:      title,
-                badge:      count,
-                repeat:     repeatType
-              });
-
+            $cordovaLocalNotification.add({
+              id:         mtarget_.id,
+              date:       date,
+              message:    message,
+              title:      title,
+              badge:      badges,
+              repeat:     repeatType
             });
           });
 
