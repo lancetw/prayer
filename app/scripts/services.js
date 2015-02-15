@@ -67,18 +67,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     getAuth: function () {
       return localStorageService.get('auth');
-    },
-    setBadgeCount: function (count) {
-      localStorageService.set('badge', count);
-    },
-    getBadgeCount: function () {
-      return localStorageService.get('badge');
-    },
-    setNotifyCount: function (count) {
-      localStorageService.set('notify', count);
-    },
-    getNotifyCount: function () {
-      return localStorageService.get('notify');
     }
   };
 })
@@ -315,7 +303,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 .factory('FreqService', function ($resource, $q, $log, _) {
   var table = [
     {name:'尚未設定', val: 0},
-    {name:'測試用（15分鐘）', val: 60*15},
+//    {name:'測試用（15分鐘）', val: 15*60},
     {name:'一天兩次', val: 43200},
     {name:'一天', val: 86400},
     {name:'兩天', val: 86400*2},
@@ -354,9 +342,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('NotifyService', function ($ionicPlatform, $q, $log, $cordovaBadge, $cordovaLocalNotification, $ionicPopup, ConfigService) {
-  var notifyCount = 0;
-  var count = 0;
+.factory('NotifyService', function ($ionicPlatform, $timeout, $q, $log, $cordovaBadge, $cordovaLocalNotification, $ionicPopup) {
   var reqPermissionCount = 0;
   var maxReqPermissionCount = 3;
 
@@ -369,7 +355,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.cancel(tid.toString());
-          self.subCount();
         });
       } catch (err) {}
     },
@@ -391,7 +376,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       var days = mtarget_.freq > 43200 ? (mtarget_.freq / (60*60*24)) : '半';
       var message = mtarget_.freq >=43200 ? '您已經超過' + days + '天沒有為' + mtarget_.name + '禱告囉！' : '您已經超過' + (mtarget_.freq / 60) + '分鐘沒有為' + mtarget_.name + '禱告囉！';
       var date = new Date(now + 1000 * mtarget_.freq);
-      var repeatType = mtarget_.freq >= 43200 ? 'daily' : 'hourly';
+      var repeatType = mtarget_.freq >= 43200 ? 'daily' : 'minutely';
       if (mtarget_.freq >= 86400) {
         repeatType = 'daily';
       }
@@ -399,14 +384,11 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
 
-          self.addCount();
-
           $cordovaLocalNotification.add({
             id:         mtarget_.id,
             date:       date,
             message:    message,
             title:      title,
-            //badge:    0,
             repeat:     repeatType
           });
 
@@ -449,78 +431,12 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
       return q.promise;
     },
-    addCount: function () {
-      count = count + 1;
-      ConfigService.setBadgeCount(count);
-    },
-    subCount: function () {
-      if (count > 0) {
-        count = count - 1;
-        ConfigService.setBadgeCount(count);
-      }
-    },
-    getCount: function () {
-      count = ConfigService.getBadgeCount();
-      return count;
-    },
-    clearCount: function () {
-      count = 0;
-      ConfigService.setBadgeCount(count);
-    },
-    showNotifyCount: function () {
-      notifyCount = count;
-      ConfigService.setNotifyCount(notifyCount);
-    },
-    addNotifyCount: function () {
-      notifyCount = notifyCount + 1;
-      ConfigService.setNotifyCount(notifyCount);
-    },
-    subNotifyCount: function () {
-      if (notifyCount > 0) {
-        notifyCount = notifyCount - 1;
-        ConfigService.setNotifyCount(notifyCount);
-      }
-    },
-    getNotifyCount: function () {
-      notifyCount = ConfigService.getNotifyCount();
-      return notifyCount;
-    },
-    clearNotifyCount: function () {
-      notifyCount = 0;
-      ConfigService.setNotifyCount(notifyCount);
-    },
     purge: function () {
       try {
         $cordovaLocalNotification.hasPermission().then(function () {
-          count = 0;
-          self.clearCount();
-          self.clearNotifyCount();
           $cordovaLocalNotification.cancelAll();
         });
       } catch (err) {}
-    },
-    showBadgeCount: function () {
-      try {
-        $cordovaBadge.hasPermission().then( function () {
-          $cordovaBadge.set(count);
-        }, function () {
-
-        });
-      } catch (err) {
-
-      }
-    },
-    clearBadgeCount: function () {
-      try {
-        $cordovaBadge.hasPermission().then( function () {
-          $cordovaBadge.clear();
-          self.clearCount();
-        }, function () {
-
-        });
-      } catch (err) {
-
-      }
     },
     init: function () {
       try {
@@ -529,15 +445,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
 
-          $cordovaBadge.configure({ autoClear: true });
-
-          $cordovaLocalNotification.ontrigger = function () {
-            // 自行管理 Bagdes 計數
-            self.showBagdeCount();
-            self.showNotifyCount();
+          window.plugin.notification.local.onclick = function (id, state, json) {
+            //console.log('clicked!');
           };
 
         });
+
+        $cordovaBadge.hasPermission().then(function () {
+          $cordovaBadge.configure({ autoClear: true });
+        });
+
       } catch (err) {}
     }
   };
@@ -770,10 +687,14 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     targets: function () {
       items = ConfigService.getMtarget();
       return _.countBy(items, function (obj) {
-        if (obj.status === true) {
-          return 'avail';
+        if (obj.past) {
+          if (moment().diff(obj.past) > (obj.freq * 1000)) {
+            return 'count';
+          } else {
+            return 'wait';
+          }
         } else {
-          return 'clicked';
+          return 'count';
         }
       });
     }

@@ -341,7 +341,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.mtarget = {};
       $scope.mtarget.sinner = false;
       $scope.mtarget.freqs = FreqService.getTable();
-      $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
+      $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
 
       q.resolve($scope.mtarget);
 
@@ -641,7 +641,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.mtarget = {};
     $scope.mtarget.sinner = false;
     $scope.mtarget.freqs = FreqService.getTable();
-    $scope.mtarget.freq = $scope.mtarget.freqs[1].val;
+    $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
 
     $scope.modal.show();
   };
@@ -674,7 +674,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       MtargetsService.update($scope.mtargets);
 
       NotifyService.run($scope.mtarget);
-      NotifyService.addNotifyCount();
 
       LoadingService.done();
 
@@ -713,7 +712,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
 
     MtargetsService.remove(tid);
-    NotifyService.subNotifyCount();
 
     drv.delete(settingData)
     .$promise.then(function () {
@@ -745,7 +743,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       NotifyService.cancel(item.id);
       NotifyService.run(item);
-      NotifyService.subNotifyCount();
 
       MtargetsService.update($scope.mtargets);
 
@@ -978,13 +975,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('TabCtrl', function ($scope, $log, $q, NotifyService) {
+.controller('TabCtrl', function ($scope, $log, $q, AlertBadgesService) {
   $scope.badges = {};
 
   $scope.$watch(
     function () {
-      return NotifyService.getNotifyCount();
-      //return AlertBadgesService.targets().avail;
+      return AlertBadgesService.targets().count;
     },
     function (newVal) {
       $scope.badges.prayer = newVal;

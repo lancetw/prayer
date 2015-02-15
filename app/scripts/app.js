@@ -9,7 +9,7 @@
 angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Prayer.controllers', 'LocalStorageModule', 'angularMoment'])
 
 
-.run(function($ionicPlatform, $cordovaStatusbar, KeyboardService, NotifyService, $log, amMoment) {
+.run(function ($ionicPlatform, $log, $cordovaStatusbar, KeyboardService, NotifyService, amMoment) {
   $ionicPlatform.ready(function () {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -37,7 +37,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 .provider('NgLog', function () {
   /* jshint ignore:start */
 
-  this.track = function(name, data) {
+  this.track = function (name, data) {
     var initInjector = angular.injector(['ng']);
     var $q = initInjector.get('$q');
     var $http = initInjector.get('$http');
