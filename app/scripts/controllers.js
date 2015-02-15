@@ -586,9 +586,14 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         toolbar: 'yes'
       };
 
+    LoadingService.loading();
     $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
-    .then( function () {})
-    .catch (function () {});
+    .then( function () {
+      LoadingService.done();
+    })
+    .catch(function (err) {
+      LoadingService.log(err);
+    });
 
   };
 
@@ -623,10 +628,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.openChurchModal = function () {
     NotifyService.getScheduledIdsList().then(function (list) {
       $scope.scheduledIds = list;
-    });
-
-    NotifyService.getCount().then(function (count) {
-      $scope.notifyCount = count;
     });
 
     $scope.churchModal.show();
@@ -671,7 +672,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.closeMtargetModal();
       $ionicScrollDelegate.scrollTop();
       MtargetsService.update($scope.mtargets);
+
       NotifyService.run($scope.mtarget);
+      NotifyService.addNotifyCount();
+
       LoadingService.done();
 
     }, function (err) {
@@ -707,7 +711,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.showDeleteState = false;
       $ionicListDelegate.showDelete($scope.showDeleteState);
     }
+
     MtargetsService.remove(tid);
+    NotifyService.subNotifyCount();
 
     drv.delete(settingData)
     .$promise.then(function () {
@@ -736,7 +742,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       var item = MtargetsService.item($scope.action.tid);
       item.status = false;
       item.past = new Date();
+
+      NotifyService.cancel(item.id);
       NotifyService.run(item);
+      NotifyService.subNotifyCount();
 
       MtargetsService.update($scope.mtargets);
 
@@ -969,12 +978,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 })
 
-.controller('TabCtrl', function ($scope, $log, $q, AlertBadgesService) {
+.controller('TabCtrl', function ($scope, $log, $q, NotifyService) {
   $scope.badges = {};
 
   $scope.$watch(
     function () {
-      return AlertBadgesService.targets().avail;
+      return NotifyService.getNotifyCount();
+      //return AlertBadgesService.targets().avail;
     },
     function (newVal) {
       $scope.badges.prayer = newVal;
