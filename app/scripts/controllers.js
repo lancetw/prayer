@@ -586,13 +586,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         toolbar: 'yes'
       };
 
-    LoadingService.loading();
     $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
     .then( function () {
-      LoadingService.done();
     })
     .catch(function (err) {
-      LoadingService.log(err);
     });
 
   };
