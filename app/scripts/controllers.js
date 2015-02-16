@@ -573,7 +573,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.prepareTargets(true).then(function () {
       $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
-    }, function () {
+    }, function (err) {
       $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
     });
@@ -791,7 +791,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
           if ($scope.mtargets_) {
             $scope.mtargets = MtargetsService.merge($scope.mtargets, $scope.mtargets_);
           }
-
           if (!$scope.mtargets || $scope.mtargets.length === 0) {
             q.resolve($scope.mtargets);
           }
@@ -812,6 +811,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
               q.resolve($scope.mtargets);
             }
           });
+        }, function (err) {
+          q.reject(err);
         });
 
       } else {

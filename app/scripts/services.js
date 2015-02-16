@@ -73,7 +73,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('LoadingService', function ($ionicLoading, $timeout, $log) {
-  return {
+  var self = {
     loading: function (duration) {
       //duration = (typeof duration === 'undefined') ? '1000' : duration;
 
@@ -110,18 +110,25 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       });
     },
     log: function (err) {
-      $log.warn('錯誤提示：', err);
-      // TODO 記錄到伺服器
-      $ionicLoading.show({
-        template: '發生錯誤，請重試',
-        animation: 'fade-in',
-        showBackdrop: false,
-        showDelay: 0,
-        duration: 2000,
-        hideOnStateChange: true
-      });
+      $log.warn('錯誤提示：', JSON.stringify(err));
+      if (+err.status === 0) {
+        self.msg('無法與伺服器連線');
+      } else {
+        // TODO 記錄到伺服器
+        $ionicLoading.show({
+          template: '發生錯誤，請重試',
+          animation: 'fade-in',
+          showBackdrop: false,
+          showDelay: 0,
+          duration: 2000,
+          hideOnStateChange: true
+        });
+      }
+
     }
   };
+
+  return self;
 })
 
 .factory('DeviceService', function ($ionicPlatform, $q, $cordovaDevice) {
@@ -585,8 +592,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         }
       );
     },
-    all: function (token, func) {
-      items = self.init(token).query(func);
+    all: function (token, func, errfunc) {
+      items = self.init(token).query(func, errfunc);
       return items;
     },
     update: function (mtargets) {
@@ -687,14 +694,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     targets: function () {
       items = ConfigService.getMtarget();
       return _.countBy(items, function (obj) {
-        if (obj.past) {
-          if (moment().diff(obj.past) > (obj.freq * 1000)) {
-            return 'count';
-          } else {
-            return 'wait';
-          }
+        if (obj.past && (obj.freq > 0)) {
+          return moment().diff(obj.past) > (obj.freq * 1000) ? 'count' : 'wait';
         } else {
-          return 'count';
+          return obj.freq > 0 ? 'count' : 'wait';
         }
       });
     }
