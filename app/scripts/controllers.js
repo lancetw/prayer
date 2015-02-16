@@ -908,6 +908,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.mtarget.name = '';
   };
 
+  $scope.mtargetNameIsModified = false;
+  $scope.toogleMtargetNameBox = function () {
+    $scope.mtargetNameIsModified = !$scope.mtargetNameIsModified;
+  };
+
   $scope.init();
   if (!$scope.mtarget) {
     $ionicHistory.clearCache();

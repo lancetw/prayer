@@ -11,14 +11,14 @@
 
     <div class="list card">
 
-      <a event-focus="click" event-focus-id="inputMtargetName" ng-show="!!showModifyMtargetName === false" class="item-enter item item-icon-left" ng-click="showModifyMtargetName = !showModifyMtargetName">
+      <a event-focus="click" event-focus-id="inputMtargetName" class="item-enter item item-icon-left" ng-click="toogleMtargetNameBox()" ng-model="mtargetNameIsModified" ng-if="!mtargetNameIsModified">
         <i class="icon ion-person-add"></i>
         <span>{{ mtarget.name }}</span>
       </a>
 
-      <div ng-show="!!showModifyMtargetName === true" class="item-enter item item-icon-left">
+      <div ng-model="mtargetNameIsModified" ng-if="mtargetNameIsModified" class="item-enter item item-icon-left">
         <i class="icon ion-person-add"></i>
-        <input id="inputMtargetName" type="text" class="itemInput" placeholder="輸入新的名稱" ng-model="mtarget.name" ng-blur="showModifyMtargetName = false">
+        <input id="inputMtargetName" type="text" class="itemInput" placeholder="輸入新的名稱" ng-model="mtarget.name" ng-blur="toogleMtargetNameBox()">
       </div>
 
       <a href="#" class="item item-icon-left" ng-click="updateMtargetFreq()">
