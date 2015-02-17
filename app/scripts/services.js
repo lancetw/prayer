@@ -8,9 +8,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 .factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
   return {
     'responseError': function(response) {
-      if (+response.status === 401) {
+      if (+response.status === 401 || +response.status === 0) {
         ConfigService.purge();
-        $location.path('/main');
+        $location.path('/intro');
       }
       return $q.reject(response);
     }

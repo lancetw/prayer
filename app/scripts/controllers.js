@@ -7,7 +7,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicNavBarDelegate.showBackButton(false);
 
   $scope.Device = function () {
-    LoadingService.loading();
+    //LoadingService.loading();
 
     DeviceService.detect()
     .then(function (uuid) {
@@ -1039,6 +1039,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.checkEmptyTips();
     LoadingService.done();
   }, function (err) {
+    if (+err.status === 401) {
+      $ionicHistory.clearCache();
+      $ionicHistory.clearHistory();
+      $state.go('intro', {}, {cache: false, reload: true});
+    }
     LoadingService.log(err);
   });
 
