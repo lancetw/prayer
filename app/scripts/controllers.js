@@ -101,6 +101,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $state.go('address', $stateParams);
   };
 
+  $scope.toKeyword = function () {
+    $state.go('keyword', $stateParams);
+  };
+
   $scope.toMain = function () {
     ConfigService.purge();
     $state.go('main');
@@ -212,17 +216,127 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     ConfigService.setMap($scope.map);
 
     if ($stateParams && $stateParams.action === 'changeChurch') {
-      $state.go('reset-church', $stateParams);
+      if ($scope.map.item) {
+        $state.go('reset-church', $stateParams);
+      } else {
+        $state.go('custom-church', $stateParams);
+      }
     } else {
       $state.go('mtarget');
     }
   };
 
-  $ionicPlatform.ready(function () {
-    $scope.init();
-  });
+  $scope.init();
+})
+
+
+.controller('KeywordCtrl', function ($scope, $state, $stateParams, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService, KeyboardService) {
+  $scope.init = function () {
+
+    var q = $q.defer();
+
+    try {
+      KeyboardService.hideAccessoryBar();
+      $scope.map = {};
+
+      $ionicModal.fromTemplateUrl('templates/map-addr.html', function ($ionicModal) {
+        $scope.modal = $ionicModal;
+      }, {
+        scope: $scope,
+        animation: 'slide-in-up'
+      });
+
+      $scope.map.items = [];
+      $scope.map.page = 1;
+      $scope.map.total = 0;
+      $scope.modalIsOpening = false;
+
+    } catch (err) {
+      q.reject(err);
+    }
+
+    return q.promise;
+  };
+
+  $scope.openModal = function() {
+    $scope.modal.show();
+    $scope.modalIsOpening = true;
+  };
+  $scope.closeModal = function() {
+    $scope.modal.hide();
+    $scope.modalIsOpening = false;
+  };
+
+  $scope.fetchList = function (keyword) {
+    LoadingService.loading();
+
+    $scope.map.keyword = keyword;
+
+    $scope.loadMoreData();
+
+    $timeout(function () {
+      $scope.openModal();
+    }, 100);
+  };
+
+  $scope.loadMoreData = function() {
+    /*jshint camelcase: false */
+    MapService.keyword($scope.map).query( function (resp) {
+      $scope.map.total = resp.total;
+      $scope.map.lastPage = resp.last_page;
+      $scope.map.items = $scope.map.items.concat(resp.data);
+      $scope.$broadcast('scroll.infiniteScrollComplete');
+      $scope.map.page += 1;
+
+      LoadingService.done();
+
+      if ($scope.map.total === 0) {
+        LoadingService.msg('查無「' + $scope.map.keyword + '」的資料。');
+      }
+
+    }, function (err) {
+      LoadingService.log(err);
+    });
+
+  };
+
+  $scope.moreDataCanBeLoaded = function () {
+    if (!$scope.modalIsOpening) {
+      return false;
+    }
+    if ($scope.map && $scope.map.items && ($scope.map.total > $scope.map.items.length)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  $scope.toLocation = function() {
+    $state.go('location', $stateParams);
+  };
+
+  $scope.toMtarget = function (item) {
+    $scope.map.item = item;
+    $scope.map.items = undefined;
+    $scope.closeModal();
+
+    ConfigService.setMap($scope.map);
+
+    if ($stateParams && $stateParams.action === 'changeChurch') {
+      if ($scope.map.item) {
+        $state.go('reset-church', $stateParams);
+      } else {
+        $state.go('custom-church', $stateParams);
+      }
+    } else {
+      $state.go('mtarget');
+    }
+  };
+
+  $scope.init();
 
 })
+
 
 .controller('MapCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $log, $timeout, $q, $ionicNavBarDelegate, $ionicScrollDelegate, MapService, LoadingService, ConfigService, KeyboardService) {
 
@@ -316,17 +430,57 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     ConfigService.setMap($scope.map);
 
     if ($stateParams && $stateParams.action === 'changeChurch') {
+      if ($scope.map.item) {
+        $state.go('reset-church', $stateParams);
+      } else {
+        $state.go('custom-church', $stateParams);
+      }
+    } else {
+      $state.go('mtarget');
+    }
+  };
+
+  $scope.init();
+})
+
+
+.controller('CustomChurchCtrl', function ($scope, $state, $stateParams, $ionicPlatform, $log, $timeout, $q, $ionicNavBarDelegate, $ionicScrollDelegate, MapService, LoadingService, ConfigService) {
+
+  $scope.init = function () {
+    var q = $q.defer();
+
+    try {
+      $ionicNavBarDelegate.showBackButton(true);
+
+      $scope.map = {
+        item: {}
+      };
+
+      q.resolve('init');
+
+    } catch (err) {
+      q.reject(err);
+    }
+
+    return q.promise;
+  };
+
+  $scope.toResetChurch = function () {
+    $scope.map.item.lat = 0;
+    $scope.map.item.lng = 0;
+
+    ConfigService.setMap($scope.map);
+
+    if ($stateParams && $stateParams.action === 'changeChurch' && $scope.map.item) {
       $state.go('reset-church', $stateParams);
     } else {
       $state.go('mtarget');
     }
   };
 
-  $ionicPlatform.ready(function () {
-    $scope.init();
-  });
-
+  $scope.init();
 })
+
 
 .controller('MtargetCtrl', function ($scope, $state, $log, $q, $ionicPlatform, $ionicNavBarDelegate, ConfigService, FreqService) {
 
@@ -369,10 +523,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
   };
 
-  $ionicPlatform.ready(function () {
-    $scope.init();
-  });
-
+  $scope.init();
 })
 
 
@@ -381,24 +532,34 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.saveChurch = function () {
     $scope.auth = ConfigService.getAuth();
     $scope.map = ConfigService.getMap();
-    UserAction.setAuth($scope.auth);
-    UserAction.joinChurch($scope.map).then(function () {
+
+    if (!$scope.map || !$scope.map.item || !$scope.map.item.hasOwnProperty('ocname')) {
       $ionicHistory.clearCache();
       $ionicHistory.clearHistory();
       $timeout(function () {
         $state.go('tab.prayer-index', $stateParams, {cache: false, reload: true});
       }, 1000);
-    }, function (err) {
-      LoadingService.log(err);
-      $state.go('location', $stateParams, {cache: false, reload: true});
-    });
+
+    } else {
+
+      UserAction.setAuth($scope.auth);
+      UserAction.joinChurch($scope.map).then(function () {
+        $ionicHistory.clearCache();
+        $ionicHistory.clearHistory();
+        $timeout(function () {
+          $state.go('tab.prayer-index', $stateParams, {cache: false, reload: true});
+        }, 1000);
+      }, function (err) {
+        LoadingService.log(err);
+        $state.go('location', $stateParams, {cache: false, reload: true});
+      });
+    }
+
   };
 
   if ($stateParams && $stateParams.action === 'changeChurch') {
     $scope.saveChurch();
   }
-
-
 })
 
 
@@ -406,6 +567,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.init = function () {
     var q = $q.defer();
+
+    $ionicPlatform.ready().then(function () {
+      KeyboardService.hideAccessoryBar();
+    });
 
     try {
       $scope.map = ConfigService.getMap();
@@ -423,7 +588,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         mtarget: false
       };
 
-      if ($scope.map && $scope.map.item.hasOwnProperty('ocname')) {
+      if ($scope.map && $scope.map.item && $scope.map.item.hasOwnProperty('ocname')) {
         $scope.block.church = true;
       }
       if ($scope.mtarget && $scope.mtarget.hasOwnProperty('freq')) {
@@ -519,6 +684,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.init = function () {
     var q = $q.defer();
     try {
+
       $ionicNavBarDelegate.showBackButton(false);
 
       $ionicModal.fromTemplateUrl('templates/mtarget-new.html', function ($ionicModal) {
@@ -595,6 +761,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     .then( function () {
     })
     .catch(function (err) {
+      LoadingService.log(err);
     });
 
   };
@@ -964,7 +1131,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 })
 
 
-.controller('TWZipCodeCtrl', function ($ionicPopup, $log, $q, $scope, TWZipCode) {
+.controller('TWZipCodeCtrl', function ($scope, TWZipCode) {
 
   TWZipCode.all().then(function (sel) {
     $scope.twZipCodeData = sel;
@@ -986,12 +1153,29 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     if ($scope.twzipcode.city && $scope.twzipcode.region) {
       $scope.map.items = [];
       $scope.map.page = 1;
+      $scope.map.total = 0;
       $scope.fetchList($scope.twzipcode.city, $scope.twzipcode.region);
     }
 
   };
 
 })
+
+
+.controller('InputKeywordCtrl', function ($scope, KeyboardService) {
+
+  $scope.keywordSubmit = function () {
+    if ($scope.keyword) {
+      KeyboardService.close();
+      $scope.map.items = [];
+      $scope.map.page = 1;
+      $scope.map.total = 0;
+      $scope.fetchList($scope.keyword);
+    }
+  };
+
+})
+
 
 .controller('TabCtrl', function ($scope, $log, $q, AlertBadgesService) {
   $scope.badges = {};

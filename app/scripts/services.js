@@ -452,9 +452,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
 
-          window.plugin.notification.local.onclick = function (id, state, json) {
+          /*window.plugin.notification.local.onclick = function (id, state, json) {
             //console.log('clicked!');
-          };
+          };*/
 
         });
 
@@ -513,6 +513,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     nearby: function (prams) {
       return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, lat: prams.lat, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
+    },
+    keyword: function (prams) {
+      return $resource(ENV.apiEndpoint + 'map/search', {keyword: prams.keyword, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
     }
   };
 })

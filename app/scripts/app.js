@@ -201,6 +201,13 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
       controller: 'AddressCtrl'
     })
 
+    .state('keyword', {
+      url: '/keyword',
+      params: {action: null},
+      templateUrl: 'templates/keyword.html',
+      controller: 'KeywordCtrl'
+    })
+
     .state('map', {
       url: '/map',
       params: {action: null},
@@ -210,8 +217,16 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 
     .state('mtarget', {
       url: '/mtarget',
+      params: {action: null},
       templateUrl: 'templates/mtarget.html',
       controller: 'MtargetCtrl'
+    })
+
+    .state('custom-church', {
+      url: '/customchurch',
+      params: {action: null},
+      templateUrl: 'templates/custom-church.html',
+      controller: 'CustomChurchCtrl'
     })
 
     .state('reset-church', {

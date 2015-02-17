@@ -1,0 +1,24 @@
+<ion-view hide-back-button="false" title="認領代禱對象">
+  <ion-nav-buttons side="right"></ion-nav-buttons>
+  <ion-content>
+    <form>
+    <ion-item class="item-dark">
+      <label class="item item-input">
+        <span class="input-label">自訂教會名稱</span>
+        <input ng-model="map.item.ocname" type="text" placeholder="＊＊基督教會">
+      </label>
+    </ion-item>
+
+    <div class="card">
+      <div class="item item-text-wrap">
+      請記得到 church.oursweb.net 新增您的教會資料，以利他人搜尋。
+      </div>
+    </div>
+
+      <button ng-disabled="!(!!map.item.ocname)" ng-click="toResetChurch()" class="button button-dark button-block">確定</button>
+
+    </div>
+    </form>
+  </ion-content>
+
+</ion-view>
