@@ -41,7 +41,7 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     var initInjector = angular.injector(['ng']);
     var $q = initInjector.get('$q');
     var $http = initInjector.get('$http');
-    var LOGGER_SERVER = 'http://1and1.deliverwork.info/api/v1/';
+    var LOGGER_SERVER = 'http://1and1.ccea.org.tw/api/v1/';
 
     var q = $q.defer();
 
