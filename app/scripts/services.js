@@ -5,12 +5,16 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
-.factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
+.factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService, LoadingService) {
   return {
     'responseError': function(response) {
-      if (+response.status === 401 || +response.status === 0) {
+      if (+response.status === 401) {
         ConfigService.purge();
         $location.path('/intro');
+      } else if (+response.status === 0) {
+        LoadingService.msg('無法與伺服器連線');
+      } else {
+        //
       }
       return $q.reject(response);
     }
