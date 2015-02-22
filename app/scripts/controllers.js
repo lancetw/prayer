@@ -1124,7 +1124,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 })
 
 
-.controller('TWZipCodeCtrl', function ($scope, TWZipCode) {
+.controller('TWZipCodeCtrl', function ($scope, TWZipCode, KeyboardService) {
 
   TWZipCode.all().then(function (sel) {
     $scope.twZipCodeData = sel;
@@ -1148,6 +1148,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.map.page = 1;
       $scope.map.total = 0;
       $scope.fetchList($scope.twzipcode.city, $scope.twzipcode.region, $scope.twzipcode.filter);
+      KeyboardService.close();
     }
 
   };
