@@ -1,6 +1,6 @@
-<ion-view hide-back-button="true" title="教會名稱輸入系統">
+<ion-view hide-back-button="true" title="教會名稱輸入系統" class="bg-dark">
   <ion-nav-buttons side="right"></ion-nav-buttons>
-  <ion-content class="bg-dark">
+  <ion-content>
 
     <div class="list card">
       <div class="item item-divider">選擇您的所在地</div>
@@ -14,6 +14,7 @@
             <option value="">請選擇</option>
           </select>
         </div>
+
         <div class="item item-input item-select">
           <div class="input-label">
             鄉鎮市區
@@ -22,14 +23,22 @@
             <option value="">請選擇</option>
           </select>
         </div>
-        <input class="button button-block button-positive" type="submit" id="submit" value="查詢" />
-      </form>
+
+        <div class="item item-input">
+          <input type="search" ng-model="twzipcode.filter" placeholder="指定過濾文字">
+        </div>
+
+          <input class="button button-block button-positive" type="submit" id="submit" value="查詢" />
+        </form>
+        </div>
       </div>
-    </div>
 
     <div class="list">
+      <button class="button button-full button-dark" ng-click="toKeyword()">
+      或是使用關鍵字找尋我的教會
+      </button>
       <button class="button button-full button-dark" ng-click="toLocation()">
-      或是使用 GPS 找尋我的教會
+      嘗試使用 GPS 找尋我的教會
       </button>
     </div>
 

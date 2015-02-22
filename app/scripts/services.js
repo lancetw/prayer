@@ -5,14 +5,74 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
-.factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService, LoadingService) {
+.factory('LoadingService', function ($ionicLoading, $timeout, $log) {
+  var self = {
+    loading: function (duration) {
+      //duration = (typeof duration === 'undefined') ? '1000' : duration;
+
+      $ionicLoading.show({
+        template: '<i class="icon ion-ios7-reloading"></i>',
+        animation: 'fade-in',
+        showBackdrop: false,
+        showDelay: 0,
+        duration: duration,
+        hideOnStateChange: true
+      });
+    },
+    done: function () {
+      $timeout(function() { $ionicLoading.hide(); }, 1500);
+    },
+    msg: function (message) {
+      $ionicLoading.show({
+        template: message,
+        animation: 'fade-in',
+        showBackdrop: false,
+        showDelay: 0,
+        duration: 2000,
+        hideOnStateChange: false
+      });
+    },
+    error: function (message) {
+      $ionicLoading.show({
+        template: message,
+        animation: 'fade-in',
+        showBackdrop: false,
+        showDelay: 0,
+        duration: 2000,
+        hideOnStateChange: true
+      });
+    },
+    log: function (err) {
+      $log.warn('錯誤提示：', JSON.stringify(err));
+      if (+err.status === 0) {
+        self.msg('無法與伺服器連線');
+      } else {
+        // TODO 記錄到伺服器
+        $ionicLoading.show({
+          template: '發生錯誤，請重試',
+          animation: 'fade-in',
+          showBackdrop: false,
+          showDelay: 0,
+          duration: 2000,
+          hideOnStateChange: true
+        });
+      }
+
+    }
+  };
+
+  return self;
+})
+
+
+.factory('globalHttpErrorInterceptor', function ($q, $location, ConfigService) {
   return {
     'responseError': function(response) {
       if (+response.status === 401) {
         ConfigService.purge();
         $location.path('/intro');
       } else if (+response.status === 0) {
-        LoadingService.msg('無法與伺服器連線');
+        response.message = '無法與伺服器連線';
       } else {
         //
       }
@@ -73,66 +133,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return localStorageService.get('auth');
     }
   };
-})
-
-
-.factory('LoadingService', function ($ionicLoading, $timeout, $log) {
-  var self = {
-    loading: function (duration) {
-      //duration = (typeof duration === 'undefined') ? '1000' : duration;
-
-      $ionicLoading.show({
-        template: '<i class="icon ion-ios7-reloading"></i>',
-        animation: 'fade-in',
-        showBackdrop: false,
-        showDelay: 0,
-        duration: duration,
-        hideOnStateChange: true
-      });
-    },
-    done: function () {
-      $timeout(function() { $ionicLoading.hide(); }, 1500);
-    },
-    msg: function (message) {
-      $ionicLoading.show({
-        template: message,
-        animation: 'fade-in',
-        showBackdrop: false,
-        showDelay: 0,
-        duration: 2000,
-        hideOnStateChange: false
-      });
-    },
-    error: function (message) {
-      $ionicLoading.show({
-        template: message,
-        animation: 'fade-in',
-        showBackdrop: false,
-        showDelay: 0,
-        duration: 2000,
-        hideOnStateChange: true
-      });
-    },
-    log: function (err) {
-      $log.warn('錯誤提示：', JSON.stringify(err));
-      if (+err.status === 0) {
-        self.msg('無法與伺服器連線');
-      } else {
-        // TODO 記錄到伺服器
-        $ionicLoading.show({
-          template: '發生錯誤，請重試',
-          animation: 'fade-in',
-          showBackdrop: false,
-          showDelay: 0,
-          duration: 2000,
-          hideOnStateChange: true
-        });
-      }
-
-    }
-  };
-
-  return self;
 })
 
 .factory('DeviceService', function ($ionicPlatform, $q, $cordovaDevice) {
@@ -516,7 +516,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return $resource(ENV.apiEndpoint + 'map', {lng: prams.lng, lat: prams.lat}, {'get': {method: 'GET', cache: true, timeout: timeout_}});
     },
     nearby: function (prams) {
-      return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, lat: prams.lat, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
+      return $resource(ENV.apiEndpoint + 'map/nearby/:dist', {code: prams.code, city: prams.city, town: prams.town, dist: prams.dist, lng: prams.lng, filter: prams.filter, lat: prams.lat, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});
     },
     keyword: function (prams) {
       return $resource(ENV.apiEndpoint + 'map/search', {keyword: prams.keyword, page: prams.page}, {'query': {method: 'GET', isArray: false, cache: true, timeout: timeout_}});

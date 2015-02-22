@@ -7,8 +7,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $ionicNavBarDelegate.showBackButton(false);
 
   $scope.Device = function () {
-    //LoadingService.loading();
-
     DeviceService.detect()
     .then(function (uuid) {
       if (auth && auth.uuidx === uuid) {
@@ -158,12 +156,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.modalIsOpening = false;
   };
 
-  $scope.fetchList = function (city, region) {
+  $scope.fetchList = function (city, region, filter) {
     LoadingService.loading();
 
     $scope.map.code = 'TW';
     $scope.map.city = city;
     $scope.map.town = region;
+    $scope.map.filter = filter;
 
     $scope.loadMoreData();
 
@@ -184,7 +183,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       LoadingService.done();
 
       if ($scope.map.total === 0) {
-        LoadingService.msg($scope.map.city + $scope.map.town + '尚無資料。');
+        if ($scope.map.filter) {
+          LoadingService.msg($scope.map.city + $scope.map.town + '沒有關於「' + $scope.map.filter + '」的資料。');
+        } else {
+          LoadingService.msg($scope.map.city + $scope.map.town + '尚無資料。');
+        }
       }
 
     }, function (err) {
@@ -206,6 +209,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.toLocation = function() {
     $state.go('location', $stateParams);
+  };
+
+  $scope.toKeyword = function () {
+    $state.go('keyword', $stateParams);
   };
 
   $scope.toMtarget = function (item) {
@@ -679,7 +686,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, $cordovaInAppBrowser, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -689,13 +696,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       $ionicModal.fromTemplateUrl('templates/mtarget-new.html', function ($ionicModal) {
         $scope.modal = $ionicModal;
-      }, {
-        scope: $scope,
-        animation: 'slide-in-up'
-      });
-
-      $ionicModal.fromTemplateUrl('templates/church-info.html', function ($ionicModal) {
-        $scope.churchModal = $ionicModal;
       }, {
         scope: $scope,
         animation: 'slide-in-up'
@@ -744,26 +744,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }, function (err) {
       $scope.checkEmptyTips();
       $scope.$broadcast('scroll.refreshComplete');
+      LoadingService.log(err);
       $q.reject(err);
     });
 
     return q.promise;
-  };
-
-  $scope.openDonationModal = function () {
-    var options = {
-        location: 'no',
-        clearcache: 'yes',
-        toolbar: 'yes'
-      };
-
-    $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
-    .then( function () {
-    })
-    .catch(function (err) {
-      LoadingService.log(err);
-    });
-
   };
 
   $scope.resetChurch = function () {
@@ -798,18 +783,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     });
 
     return q.promise;
-  };
-
-  $scope.openChurchModal = function () {
-    NotifyService.getScheduledIdsList().then(function (list) {
-      $scope.scheduledIds = list;
-    });
-
-    $scope.churchModal.show();
-  };
-
-  $scope.closeChurchModal = function () {
-    $scope.churchModal.hide();
   };
 
   $scope.openMtargetModal = function () {
@@ -1080,7 +1053,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         LoadingService.msg('名稱不能空白');
       } else {
         LoadingService.log(err);
-        $state.go('tab.prayer-index');
+        $timeout(function () {
+          $state.go('tab.prayer-index');
+        }, 3000);
       }
 
     });
@@ -1121,7 +1096,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('AboutsCtrl', function ($ionicPlatform, $ionicScrollDelegate, $ionicHistory, $scope, $state, NotifyService, ConfigService) {
+.controller('AboutsCtrl', function ($ionicPlatform, $ionicScrollDelegate, $ionicHistory, $cordovaInAppBrowser, $scope, $state, NotifyService, ConfigService, LoadingService) {
   $scope.doLogout = function () {
     $ionicScrollDelegate.scrollTop();
     ConfigService.purge();
@@ -1131,8 +1106,21 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $state.go('intro', {}, {cache: false, reload: true});
   };
 
-  $ionicPlatform.ready(function () {
-  });
+  $scope.openDonationModal = function () {
+    var options = {
+        location: 'no',
+        clearcache: 'yes',
+        toolbar: 'yes'
+      };
+
+    $cordovaInAppBrowser.open('http://www.ccea.org.tw/Content/Page.aspx?t=7&u=201', '_blank', options)
+    .then( function () {
+    })
+    .catch(function (err) {
+      LoadingService.log(err);
+    });
+  };
+
 })
 
 
@@ -1159,7 +1147,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.map.items = [];
       $scope.map.page = 1;
       $scope.map.total = 0;
-      $scope.fetchList($scope.twzipcode.city, $scope.twzipcode.region);
+      $scope.fetchList($scope.twzipcode.city, $scope.twzipcode.region, $scope.twzipcode.filter);
     }
 
   };
