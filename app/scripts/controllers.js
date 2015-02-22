@@ -864,11 +864,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     drv.delete(settingData)
     .$promise.then(function () {
       NotifyService.cancel(tid);
+      ConfigService.setMtarget($scope.mtargets);
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
         NotifyService.purge();
       }
-
       $scope.checkEmptyTips();
+
     }, function (err) {
       LoadingService.log(err);
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
