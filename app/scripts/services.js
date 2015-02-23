@@ -5,7 +5,7 @@ var timeout_ = 10000;
 
 angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'angularMoment'])
 
-.factory('LoadingService', function ($ionicLoading, $timeout, $log) {
+.factory('LoadingService', function ($ionicLoading, $timeout, $log, NgLog) {
   var self = {
     loading: function (duration) {
       //duration = (typeof duration === 'undefined') ? '1000' : duration;
@@ -47,7 +47,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       if (+err.status === 0) {
         self.msg('無法與伺服器連線');
       } else {
-        // TODO 記錄到伺服器
+
+        var data = {
+          type: 'error',
+          url: window.location.hash,
+          localtime: Date.now(),
+          error: err
+        };
+
+        NgLog.track('exception', data);
+
         $ionicLoading.show({
           template: '發生錯誤，請重試',
           animation: 'fade-in',
