@@ -1114,13 +1114,15 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }, function (err) {
       if (+err.status === 0) {
         $rootScope.checkOfflineMode(true);
-        $ionicHistory.goBack();
+        $timeout(function () {
+          $ionicHistory.goBack();
+        }, 3000);
       } else if (+err.status === 403) {
         LoadingService.msg('名稱不能空白');
       } else {
         LoadingService.log(err);
         $timeout(function () {
-          $state.go('tab.prayer-index');
+          $ionicHistory.goBack();
         }, 3000);
       }
 
