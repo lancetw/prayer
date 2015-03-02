@@ -934,6 +934,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     var q = $q.defer();
 
+    $scope.now = moment();
+    $scope.timedUpdate = $interval(function () {
+      $scope.now = moment();
+    }, 1000);
+
     $scope.tracking = function (item) {
       $interval(function () {
         if (!item.status && item.past !== 0) {
@@ -960,11 +965,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
           MtargetsService.clean();
           LazyService.run();
         }
-
-        $scope.now = moment();
-        $scope.timedUpdate = $interval(function () {
-          $scope.now = moment();
-        }, 1000);
 
         $scope.mtargets = ConfigService.getMtarget();
 
