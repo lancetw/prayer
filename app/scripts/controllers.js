@@ -1016,7 +1016,23 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       }
 
     }, function (err) {
-      q.reject(err);
+      $scope.mtargets = ConfigService.getMtarget();
+      angular.forEach($scope.mtargets, function (item, index) {
+
+        if (typeof item.status === 'undefined') { item.status = true; }
+        if (typeof item.past === 'undefined') { item.past = 0; }
+        if (typeof item.keep === 'undefined') { item.keep = 0; }
+
+        item.sinner = +item.sinner;
+        item.baptized = +item.baptized;
+        item.meeter = +item.meeter;
+        $scope.tracking(item);
+
+        if (index >= $scope.mtargets.length - 1) {
+          MtargetsService.update($scope.mtargets);
+          q.reject(err);
+        }
+      });
     });
 
     return q.promise;
@@ -1058,7 +1074,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $ionicHistory.clearHistory();
       $state.go('intro', {}, {cache: false, reload: true});
     } else if (+err.status === 0) {
-      // 顯示離線提示
+      $scope.checkEmptyTips();
       $rootScope.checkOfflineMode(true);
     } else {
       //LoadingService.log(err);
