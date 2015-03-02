@@ -31,17 +31,13 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     }, 100);
 
 
-    $rootScope.$on('$cordovaNetwork:online', function (event, networkState) {
+    $rootScope.$on('$cordovaNetwork:online', function () {
       LazyService.run();
-      if (networkState !== Connection.NONE) {
-        $rootScope.checkOfflineMode(false);
-      }
+      $rootScope.checkOfflineMode(false);
     });
 
-    $rootScope.$on('$cordovaNetwork:offline', function (event, networkState) {
-      if (networkState === Connection.NONE) {
-        $rootScope.checkOfflineMode(true);
-      }
+    $rootScope.$on('$cordovaNetwork:offline', function () {
+      $rootScope.checkOfflineMode(true);
     });
 
   });

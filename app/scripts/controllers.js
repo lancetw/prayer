@@ -884,9 +884,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.removeMtarget = function (tid) {
-    var settingData = {
-      id: tid
-    };
 
     if (!$scope.mtargets || $scope.mtargets.length === 0) {
       $ionicListDelegate.showDelete($scope.showDeleteState = false);
@@ -903,7 +900,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       }
       $scope.checkEmptyTips();
       LoadingService.done();
-    }, function (err) {
+    }, function () {
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
         NotifyService.purge();
       }
@@ -926,7 +923,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     UserAction.doAction($scope.action).then(function () {
       $rootScope.checkOfflineMode(false);
       LoadingService.done();
-    }, function (err) {
+    }, function () {
       $rootScope.checkOfflineMode(true);
     });
 
