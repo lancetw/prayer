@@ -689,7 +689,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $cordovaNetwork, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $rootScope, $cordovaNetwork, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService, LazyService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -737,18 +737,37 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
   };
 
+  $rootScope.checkOfflineMode = function (status) {
+    if ($rootScope.offlineMode === undefined) {
+      $rootScope.offlineMode = false;
+    }
+
+    if (status !== undefined) {
+      $rootScope.offlineMode = status;
+    } else {
+      UserAction.checkOnline().then(function () {
+        $rootScope.offlineMode = false;
+      }, function () {
+        $rootScope.offlineMode = true;
+      });
+    }
+  };
+
   $scope.doRefresh = function () {
     var q = $q.defer();
+
+    $scope.menuIsActive = false;
     $scope.showChurch();
     $scope.prepareTargets(true).then(function () {
       $scope.checkEmptyTips();
+      $rootScope.checkOfflineMode(false);
       $scope.$broadcast('scroll.refreshComplete');
       q.resolve('refreshed');
     }, function (err) {
       $scope.checkEmptyTips();
+      $rootScope.checkOfflineMode(true);
       $scope.$broadcast('scroll.refreshComplete');
-      LoadingService.log(err);
-      $q.reject(err);
+      q.reject(err);
     });
 
     return q.promise;
@@ -768,7 +787,12 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
           LoadingService.done();
           $state.go('location', {action: 'changeChurch'}, {cache: false, reload: true});
         }, function (err) {
-          LoadingService.log(err);
+          if (+err.status === 0) {
+            LoadingService.error('請先連上網路才能更換教會');
+          } else {
+            LoadingService.log(err);
+          }
+
         });
       }
     });
@@ -776,6 +800,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.showChurch = function () {
     var q = $q.defer();
+
     var drv = ChurchesService.init($scope.auth);
     drv.get().$promise.then(function (data) {
       $scope.church = data;
@@ -794,9 +819,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.mtarget.freqs = FreqService.getTable();
     $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
 
-    $ionicListDelegate.showDelete($scope.showDeleteState = false);
-
     $scope.modal.show();
+
+    $timeout(function () {
+      $scope.menuIsActive = false;
+      $ionicListDelegate.showDelete($scope.showDeleteState = false);
+    }, 200);
+
   };
 
   $scope.closeMtargetModal = function () {
@@ -834,7 +863,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       if (+err.status === 302) {
         LoadingService.error('重複的禱告對象');
       } else {
-        LoadingService.error('無法新增對象，請重試一次');
+        LoadingService.error('請先連上網路，才能新增對象');
       }
     });
   };
@@ -858,24 +887,23 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var settingData = {
       id: tid
     };
-    var drv = MtargetsService.init($scope.auth);
+
     if (!$scope.mtargets || $scope.mtargets.length === 0) {
       $ionicListDelegate.showDelete($scope.showDeleteState = false);
     }
 
     MtargetsService.remove(tid);
 
-    drv.delete(settingData)
-    .$promise.then(function () {
+    UserAction.setAuth($scope.auth);
+    UserAction.removeMtarget(tid).then(function () {
       NotifyService.cancel(tid);
       ConfigService.setMtarget($scope.mtargets);
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
         NotifyService.purge();
       }
       $scope.checkEmptyTips();
-
+      LoadingService.done();
     }, function (err) {
-      LoadingService.log(err);
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
         NotifyService.purge();
       }
@@ -883,7 +911,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.Action = function () {
-
     LoadingService.loading();
 
     var item = MtargetsService.item($scope.action.tid);
@@ -897,9 +924,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
     UserAction.setAuth($scope.auth);
     UserAction.doAction($scope.action).then(function () {
+      $rootScope.checkOfflineMode(false);
       LoadingService.done();
     }, function (err) {
-      LoadingService.log(err);
+      $rootScope.checkOfflineMode(true);
     });
 
   };
@@ -927,69 +955,72 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       MtargetsService.update($scope.mtargets);
     };
 
-    try {
-      // 先檢查網路是否正常
+    UserAction.checkOnline().then(function () {
+      try {
 
+        if (force) {
+          $scope.mtargets_ = angular.copy($scope.mtargets);
+          MtargetsService.clean();
+          LazyService.run();
+        }
 
-
-      if (force) {
-        $scope.mtargets_ = angular.copy($scope.mtargets);
-        MtargetsService.clean();
-      }
-
-      $scope.now = moment();
-      $scope.timedUpdate = $interval(function () {
         $scope.now = moment();
-      }, 1000);
+        $scope.timedUpdate = $interval(function () {
+          $scope.now = moment();
+        }, 1000);
 
-      $scope.mtargets = ConfigService.getMtarget();
+        $scope.mtargets = ConfigService.getMtarget();
 
-      if (!$scope.mtargets || $scope.mtargets === null) {
-        $scope.mtargets = MtargetsService.all($scope.auth, function () {
-          // 合併新舊資料
-          if ($scope.mtargets_) {
-            $scope.mtargets = MtargetsService.merge($scope.mtargets, $scope.mtargets_);
-          }
-          if (!$scope.mtargets || $scope.mtargets.length === 0) {
-            q.resolve($scope.mtargets);
-          }
+        if (!$scope.mtargets || $scope.mtargets === null) {
+          $scope.mtargets = MtargetsService.all($scope.auth, function () {
+            // 合併新舊資料
+            if ($scope.mtargets_) {
+              $scope.mtargets = MtargetsService.merge($scope.mtargets, $scope.mtargets_);
+            }
+            if (!$scope.mtargets || $scope.mtargets.length === 0) {
+              q.resolve($scope.mtargets);
+            }
 
-          angular.forEach($scope.mtargets, function (item, index) {
+            angular.forEach($scope.mtargets, function (item, index) {
 
-            if (typeof item.status === 'undefined') { item.status = true; }
-            if (typeof item.past === 'undefined') { item.past = 0; }
-            if (typeof item.keep === 'undefined') { item.keep = 0; }
+              if (typeof item.status === 'undefined') { item.status = true; }
+              if (typeof item.past === 'undefined') { item.past = 0; }
+              if (typeof item.keep === 'undefined') { item.keep = 0; }
 
+              item.sinner = +item.sinner;
+              item.baptized = +item.baptized;
+              item.meeter = +item.meeter;
+              $scope.tracking(item);
+
+              if (index >= $scope.mtargets.length - 1) {
+                MtargetsService.update($scope.mtargets);
+                q.resolve($scope.mtargets);
+              }
+            });
+          }, function (err) {
+            q.reject(err);
+          });
+
+        } else {
+          MtargetsService.update($scope.mtargets);
+          angular.forEach($scope.mtargets, function(item, index) {
             item.sinner = +item.sinner;
             item.baptized = +item.baptized;
             item.meeter = +item.meeter;
             $scope.tracking(item);
 
             if (index >= $scope.mtargets.length - 1) {
-              MtargetsService.update($scope.mtargets);
               q.resolve($scope.mtargets);
             }
           });
-        }, function (err) {
-          q.reject(err);
-        });
-
-      } else {
-        MtargetsService.update($scope.mtargets);
-        angular.forEach($scope.mtargets, function(item, index) {
-          item.sinner = +item.sinner;
-          item.baptized = +item.baptized;
-          item.meeter = +item.meeter;
-          $scope.tracking(item);
-
-          if (index >= $scope.mtargets.length - 1) {
-            q.resolve($scope.mtargets);
-          }
-        });
+        }
+      } catch (err) {
+        q.reject(err);
       }
-    } catch (err) {
+
+    }, function (err) {
       q.reject(err);
-    }
+    });
 
     return q.promise;
   };
@@ -1003,7 +1034,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.showDelete = function () {
-    if ($scope.mtargets.length > 0) {
+    if ($scope.mtargets && $scope.mtargets.length > 0) {
       $ionicListDelegate.showDelete($scope.showDeleteState = !$scope.showDeleteState);
     }
   };
@@ -1015,23 +1046,33 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.init().then(function () {
+    $interval(function () {
+      $rootScope.checkOfflineMode();
+    }, 60000); // 每分鐘檢查一次
+
     return $scope.prepareTargets();
   }).then(function () {
     $scope.checkEmptyTips();
     LoadingService.done();
+    $rootScope.checkOfflineMode(false);
   }, function (err) {
     if (+err.status === 401) {
       $ionicHistory.clearCache();
       $ionicHistory.clearHistory();
       $state.go('intro', {}, {cache: false, reload: true});
+    } else if (+err.status === 0) {
+      // 顯示離線提示
+      $rootScope.checkOfflineMode(true);
+    } else {
+      //LoadingService.log(err);
     }
-    LoadingService.log(err);
+
   });
 
 
 })
 
-.controller('PrayerDetailCtrl', function ($scope, $state, $stateParams, $ionicHistory, $ionicPlatform, $location, $log, $q, $timeout, MtargetsService, LoadingService, ConfigService, FreqService, KeyboardService, UserAction, focus) {
+.controller('PrayerDetailCtrl', function ($scope, $rootScope, $state, $stateParams, $ionicHistory, $ionicPlatform, $location, $log, $q, $timeout, MtargetsService, LoadingService, ConfigService, FreqService, KeyboardService, UserAction, focus) {
 
   $scope.init = function () {
     focus();
@@ -1055,9 +1096,13 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     UserAction.setAuth($scope.auth);
     UserAction.updateMtarget($scope.mtarget)
     .then(function () {
+      $rootScope.checkOfflineMode(false);
       $ionicHistory.goBack();
     }, function (err) {
-      if (+err.status === 403) {
+      if (+err.status === 0) {
+        $rootScope.checkOfflineMode(true);
+        $ionicHistory.goBack();
+      } else if (+err.status === 403) {
         LoadingService.msg('名稱不能空白');
       } else {
         LoadingService.log(err);

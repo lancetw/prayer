@@ -52,7 +52,7 @@
   -webkit-animation: 0s none;
 }
 
-.item.empty-tips {
+.item.empty-tips, .item.offline-mode {
   &.show {
     display: block;
   }
@@ -60,6 +60,16 @@
   &.hide {
     display: none;
   }
+}
+
+.item.offline-mode {
+  font-size: 14px;
+  font-weight: bold;
+  color: $light;
+  background: rgba($assertive, .8);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border: none;
 }
 
 .bg-dark {

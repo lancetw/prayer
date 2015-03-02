@@ -33,6 +33,15 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
 
     $rootScope.$on('$cordovaNetwork:online', function (event, networkState) {
       LazyService.run();
+      if (networkState !== Connection.NONE) {
+        $rootScope.checkOfflineMode(false);
+      }
+    });
+
+    $rootScope.$on('$cordovaNetwork:offline', function (event, networkState) {
+      if (networkState === Connection.NONE) {
+        $rootScope.checkOfflineMode(true);
+      }
     });
 
   });

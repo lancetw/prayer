@@ -9,9 +9,17 @@
     <ion-refresher pulling-text="往下拉可更新資料" on-refresh="doRefresh()">
     </ion-refresher>
 
+
+    <div ng-model="offlineMode" ng-if="offlineMode" ng-class="{true: 'show', false: 'hide'}[offlineMode]">
+      <div class="offline-mode item text-center">
+        您現在處於離線模式
+      </div>
+    </div>
+
     <div class="item item-divider text-center" ng-click="toogleChurchPanel()">
       {{church.name}}
     </div>
+
     <div class="top-menu animate" ng-model="menuIsActive" ng-if="menuIsActive" ng-init="menuIsActive = false;">
       <div class="button-bar">
         <button class="button button-clear button-positive" ng-click="resetChurch()">重新設定教會資料</button>

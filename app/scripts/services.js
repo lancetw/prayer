@@ -170,7 +170,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService) {
+.factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService, ConfigService) {
   var auth = {};
 
   return {
@@ -212,6 +212,17 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           LoadingService.error('無法登入，請重試一次');
         }
 
+        q.reject(err);
+      });
+
+      return q.promise;
+    },
+    checkOnline: function () {
+      var q = $q.defer();
+      var auth = ConfigService.getAuth();
+      UserCheckService.alive(auth, function (data) {
+        q.resolve(data);
+      }, function (err) {
         q.reject(err);
       });
 
@@ -322,8 +333,37 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
           $timeout(function () {
             LoadingService.done();
+            q.reject(err);
+          }, 1000);
+        } else {
+          q.reject(err);
+        }
+      });
 
-            q.resolve(err);
+      return q.promise;
+    },
+    removeMtarget: function (tid) {
+      var q = $q.defer();
+      var settingData = {
+        id: tid
+      };
+      var drv = MtargetsService.init(auth);
+      LoadingService.loading();
+
+      drv.delete(settingData)
+      .$promise.then(function (data) {
+        /* 補充先前的延遲上傳資料 */
+        LazyService.run();
+
+        q.resolve(data);
+      }, function (err) {
+        if (+err.status === 0) {
+          /* 網路發生問題，啟動延遲上傳機制 */
+          MtargetsService.lazy('delete', auth, settingData);
+
+          $timeout(function () {
+            LoadingService.done();
+            q.reject(err);
           }, 1000);
         } else {
           q.reject(err);
@@ -353,8 +393,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
           $timeout(function () {
             LoadingService.done();
-
-            q.resolve(err);
+            q.reject(err);
           }, 1000);
 
         } else {
@@ -596,14 +635,20 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('UserCheckService', function ($resource, ENV, base64) {
-  return {
+  var self = {
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
       return $resource(ENV.apiEndpoint + 'users', {},
         {'get': { method: 'GET', timeout: timeout_, headers: auth || {} }}
       );
+    },
+    alive: function (token, func, errfunc) {
+      var user = self.init(token).get(func, errfunc);
+      return user;
     }
   };
+
+  return self;
 })
 
 
@@ -720,7 +765,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     lazy: function (method, auth, settingData) {
       /*jshint camelcase: false */
-      settingData.created_at = Date.now() / 1000 | 0 ;
+      settingData.created_at = Math.floor(Date.now() / 1000);
       LazyService.add('ActionsService', method, auth, settingData);
     }
   };
