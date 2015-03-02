@@ -9,7 +9,7 @@
 angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Prayer.controllers', 'LocalStorageModule', 'angularMoment'])
 
 
-.run(function ($ionicPlatform, $log, $cordovaStatusbar, KeyboardService, NotifyService, amMoment) {
+.run(function ($rootScope, $ionicPlatform, $log, $cordovaStatusbar, $cordovaNetwork, KeyboardService, NotifyService, amMoment, LazyService) {
   $ionicPlatform.ready(function () {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -29,6 +29,11 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     $ionicPlatform.registerBackButtonAction(function (event) {
       event.preventDefault();
     }, 100);
+
+
+    $rootScope.$on('$cordovaNetwork:online', function (event, networkState) {
+      LazyService.run();
+    });
 
   });
 })

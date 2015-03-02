@@ -120,6 +120,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 })
 
 .controller('AddressCtrl', function ($scope, $state, $stateParams, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService, KeyboardService) {
+
   $scope.init = function () {
 
     var q = $q.defer();
@@ -151,6 +152,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.modal.show();
     $scope.modalIsOpening = true;
   };
+
   $scope.closeModal = function() {
     $scope.modal.hide();
     $scope.modalIsOpening = false;
@@ -190,8 +192,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         }
       }
 
-    }, function (err) {
-      LoadingService.log(err);
+    }, function () {
+      LoadingService.error('無法與伺服器連線');
     });
 
   };
@@ -238,6 +240,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
 
 .controller('KeywordCtrl', function ($scope, $state, $stateParams, $timeout, $ionicPlatform, $ionicModal, $log, $q, $ionicNavBarDelegate, LoadingService, ConfigService, MapService, KeyboardService) {
+
   $scope.init = function () {
 
     var q = $q.defer();
@@ -301,8 +304,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         LoadingService.msg('查無「' + $scope.map.keyword + '」的資料。');
       }
 
-    }, function (err) {
-      LoadingService.log(err);
+    }, function () {
+      LoadingService.error('無法與伺服器連線');
     });
 
   };
@@ -686,7 +689,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 })
 
-.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
+.controller('PrayerIndexCtrl', function ($ionicPlatform, $log, $q, $scope, $cordovaNetwork, $state, $stateParams, $timeout, $ionicPopup, $ionicModal, $ionicListDelegate, $ionicNavBarDelegate, $ionicScrollDelegate, $interval, $ionicHistory, ActionsService, ChurchesService, LoadingService, ConfigService, NotifyService, KeyboardService, UserAction, MtargetsService, FreqService) {
 
   $scope.init = function () {
     var q = $q.defer();
@@ -791,6 +794,8 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     $scope.mtarget.freqs = FreqService.getTable();
     $scope.mtarget.freq = $scope.mtarget.freqs[2].val;
 
+    $ionicListDelegate.showDelete($scope.showDeleteState = false);
+
     $scope.modal.show();
   };
 
@@ -815,7 +820,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       $scope.tracking($scope.mtarget);
       $scope.checkEmptyTips();
 
-      LoadingService.msg('新增完成');
+      LoadingService.msg('新增完成，開始點擊禱告吧！^_^');
 
       $scope.closeMtargetModal();
       $ionicScrollDelegate.scrollTop();
@@ -855,8 +860,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     };
     var drv = MtargetsService.init($scope.auth);
     if (!$scope.mtargets || $scope.mtargets.length === 0) {
-      $scope.showDeleteState = false;
-      $ionicListDelegate.showDelete($scope.showDeleteState);
+      $ionicListDelegate.showDelete($scope.showDeleteState = false);
     }
 
     MtargetsService.remove(tid);
@@ -879,26 +883,25 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   };
 
   $scope.Action = function () {
-    var settingData = {
-      tid: $scope.action.tid
-    };
-    var drv = ActionsService.init($scope.auth);
+
     LoadingService.loading();
-    return drv.save(settingData)
-    .$promise.then(function () {
-      var item = MtargetsService.item($scope.action.tid);
-      item.status = false;
-      item.past = new Date();
 
-      NotifyService.cancel(item.id);
-      NotifyService.run(item);
+    var item = MtargetsService.item($scope.action.tid);
+    item.status = false;
+    item.past = new Date();
 
-      MtargetsService.update($scope.mtargets);
+    NotifyService.cancel(item.id);
+    NotifyService.run(item);
 
+    MtargetsService.update($scope.mtargets);
+
+    UserAction.setAuth($scope.auth);
+    UserAction.doAction($scope.action).then(function () {
       LoadingService.done();
     }, function (err) {
       LoadingService.log(err);
     });
+
   };
 
   $scope.prepareTargets = function (force) {
@@ -925,6 +928,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     };
 
     try {
+      // 先檢查網路是否正常
+
+
+
       if (force) {
         $scope.mtargets_ = angular.copy($scope.mtargets);
         MtargetsService.clean();
@@ -1003,11 +1010,11 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
   $scope.menuIsActive = false;
   $scope.toogleChurchPanel = function () {
+    $ionicListDelegate.showDelete($scope.showDeleteState = false);
     $scope.menuIsActive = !$scope.menuIsActive;
   };
 
-  $scope.init()
-  .then(function () {
+  $scope.init().then(function () {
     return $scope.prepareTargets();
   }).then(function () {
     $scope.checkEmptyTips();

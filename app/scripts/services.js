@@ -45,7 +45,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     log: function (err) {
       $log.warn('錯誤提示：', JSON.stringify(err));
       if (+err.status === 0) {
-        self.msg('無法與伺服器連線');
+        //self.msg('無法與伺服器連線');
       } else {
 
         var data = {
@@ -80,11 +80,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       if (+response.status === 401) {
         ConfigService.purge();
         $location.path('/intro');
-      } else if (+response.status === 0) {
-        response.message = '無法與伺服器連線';
-      } else {
-        //
       }
+
       return $q.reject(response);
     }
   };
@@ -173,7 +170,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('UserAction', function ($ionicPlatform, $q, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService) {
+.factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService) {
   var auth = {};
 
   return {
@@ -209,7 +206,12 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           q.reject(data);
         }
       }, function (err) {
-        LoadingService.error('無法登入，請重試一次');
+        if (+err.status === 0) {
+          LoadingService.error('無法與伺服器連線');
+        } else {
+          LoadingService.error('無法登入，請重試一次');
+        }
+
         q.reject(err);
       });
 
@@ -309,9 +311,55 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
       drv.update(settingData)
       .$promise.then(function (data) {
+        /* 補充先前的延遲上傳資料 */
+        LazyService.run();
+
         q.resolve(data);
       }, function (err) {
-        q.reject(err);
+        if (+err.status === 0) {
+          /* 網路發生問題，啟動延遲上傳機制 */
+          MtargetsService.lazy('update', auth, settingData);
+
+          $timeout(function () {
+            LoadingService.done();
+
+            q.resolve(err);
+          }, 1000);
+        } else {
+          q.reject(err);
+        }
+      });
+
+      return q.promise;
+    },
+    doAction: function (action) {
+      var q = $q.defer();
+
+      var settingData = {
+        tid: action.tid
+      };
+
+      var drv = ActionsService.init(auth);
+      drv.save(settingData)
+      .$promise.then(function (data) {
+        /* 補充先前的延遲上傳資料 */
+        LazyService.run();
+
+        q.resolve(data);
+      }, function (err) {
+        if (+err.status === 0) {
+          /* 網路發生問題，啟動延遲上傳機制 */
+          ActionsService.lazy('save', auth, settingData);
+
+          $timeout(function () {
+            LoadingService.done();
+
+            q.resolve(err);
+          }, 1000);
+
+        } else {
+          q.reject(err);
+        }
       });
 
       return q.promise;
@@ -323,7 +371,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 .factory('FreqService', function ($resource, $q, $log, _) {
   var table = [
     {name:'尚未設定', val: 0},
-//    {name:'測試用（15分鐘）', val: 15*60},
     {name:'一天兩次', val: 43200},
     {name:'一天', val: 86400},
     {name:'兩天', val: 86400*2},
@@ -460,15 +507,10 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     init: function () {
       try {
-        // TODO 檢查新版本的變化
+        // TODO: 檢查新版本的變化
         $cordovaLocalNotification.promptForPermission();
         $cordovaLocalNotification.hasPermission().then(function () {
           $cordovaLocalNotification.setDefaults({ autoCancel: false });
-
-          /*window.plugin.notification.local.onclick = function (id, state, json) {
-            //console.log('clicked!');
-          };*/
-
         });
 
         $cordovaBadge.hasPermission().then(function () {
@@ -592,7 +634,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('MtargetsService', function ($resource, $q, $log, ENV, base64, _, ConfigService) {
+.factory('MtargetsService', function ($resource, $q, $log, ENV, base64, _, ConfigService, LazyService) {
 
   var items = {};
 
@@ -607,6 +649,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
          'delete': { method: 'DELETE', timeout: timeout_, headers: auth || {}}
         }
       );
+    },
+    lazy: function (method, auth, settingData) {
+      LazyService.add('MtargetsService', method, auth, settingData);
     },
     all: function (token, func, errfunc) {
       items = self.init(token).query(func, errfunc);
@@ -665,13 +710,38 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('ActionsService', function ($resource, ENV, base64) {
+.factory('ActionsService', function ($resource, ENV, base64, LazyService) {
   return {
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
       return $resource(ENV.apiEndpoint + 'actions', {},
         {'save': { method: 'POST', timeout: timeout_, headers: auth || {} }}
       );
+    },
+    lazy: function (method, auth, settingData) {
+      /*jshint camelcase: false */
+      settingData.created_at = Date.now() / 1000 | 0 ;
+      LazyService.add('ActionsService', method, auth, settingData);
+    }
+  };
+})
+
+
+.factory('LazyService', function ($injector) {
+  var opts = [];
+  return {
+    run: function () {
+      angular.forEach(opts, function (opt, i) {
+        var Service = $injector.get(opt.Service);
+        var drv = Service.init(opt.auth);
+        drv[opt.method](opt.settingData)
+        .$promise.then(function () {
+          opts.splice(i, 1);
+        });
+      });
+    },
+    add: function (Service, method, auth, settingData) {
+      opts.push({Service: Service, method: method, auth: auth, settingData: settingData});
     }
   };
 })
