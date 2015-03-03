@@ -857,7 +857,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       NotifyService.run($scope.mtarget);
 
-      LoadingService.done();
+      $timeout(function () {
+        LoadingService.done();
+      }, 1000);
 
     }, function (err) {
       if (+err.status === 302) {
@@ -900,16 +902,17 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       }
       $scope.checkEmptyTips();
       LoadingService.done();
+      $rootScope.checkOfflineMode(false);
     }, function () {
       if (!$scope.mtargets || $scope.mtargets.length === 0) {
         NotifyService.purge();
       }
+      $scope.checkEmptyTips();
+      $rootScope.checkOfflineMode(true);
     });
   };
 
   $scope.Action = function () {
-    LoadingService.loading();
-
     var item = MtargetsService.item($scope.action.tid);
     item.status = false;
     item.past = new Date();
@@ -1016,7 +1019,10 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
       }
 
     }, function (err) {
-      $scope.mtargets = ConfigService.getMtarget();
+      if (!$scope.mtargets || $scope.mtargets === null) {
+        $scope.mtargets = ConfigService.getMtarget();
+      }
+
       angular.forEach($scope.mtargets, function (item, index) {
 
         if (typeof item.status === 'undefined') { item.status = true; }
@@ -1061,6 +1067,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   $scope.init().then(function () {
     $interval(function () {
       $rootScope.checkOfflineMode();
+      if (!$rootScope.offlineMode) {
+        LazyService.run();
+      }
     }, 60000); // 每分鐘檢查一次
 
     return $scope.prepareTargets();
@@ -1110,7 +1119,9 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     UserAction.updateMtarget($scope.mtarget)
     .then(function () {
       $rootScope.checkOfflineMode(false);
-      $ionicHistory.goBack();
+      $timeout(function () {
+        $ionicHistory.goBack();
+      }, 1000);
     }, function (err) {
       if (+err.status === 0) {
         $rootScope.checkOfflineMode(true);

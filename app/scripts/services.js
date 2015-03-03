@@ -8,8 +8,6 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 .factory('LoadingService', function ($ionicLoading, $timeout, $log, NgLog) {
   var self = {
     loading: function (duration) {
-      //duration = (typeof duration === 'undefined') ? '1000' : duration;
-
       $ionicLoading.show({
         template: '<i class="icon ion-ios7-reloading"></i>',
         animation: 'fade-in',
@@ -171,17 +169,16 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService, ConfigService) {
-  var auth = {};
-
-  return {
+  var self = {
+    auth: {},
     setAuth: function (auth_) {
-      auth = auth_;
+      self.auth = auth_;
     },
     addUser: function (user_) {
       var q = $q.defer();
       var user = new UsersService();
       user.email = user_.email;
-      user.uuidx = auth.uuidx;
+      user.uuidx = self.auth.uuidx;
       user.$save().then(function (data) {
         return q.resolve(data);
       }, function (err) {
@@ -197,7 +194,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     checkUser: function (user_) {
       var q = $q.defer();
-      var drv = UserCheckService.init(auth);
+      var drv = UserCheckService.init(self.auth);
       LoadingService.loading();
       drv.get().$promise.then(function (data) {
         if (data.email === user_.email) {
@@ -235,7 +232,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         subscription: user_.subscription
       };
 
-      var drv = SettingsService.init(auth);
+      var drv = SettingsService.init(self.auth);
       drv.save(settingData)
       .$promise.then(function (data) {
         q.resolve(data);
@@ -254,7 +251,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         lat: map_.item.lat,
         cid: map_.item.oid
       };
-      var drv = ChurchesService.init(auth);
+      var drv = ChurchesService.init(self.auth);
       drv.save(settingData)
       .$promise.then(function (data) {
         q.resolve(data);
@@ -279,7 +276,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         freq: mtarget_.freq,
         sinner: mtarget_.sinner
       };
-      var drv = MtargetsService.init(auth);
+      var drv = MtargetsService.init(self.auth);
 
       drv.save(settingData)
       .$promise.then(function (data) {
@@ -317,19 +314,19 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         baptized: mtarget_.baptized,
         meeter: mtarget_.meeter
       };
-      var drv = MtargetsService.init(auth);
+      var drv = MtargetsService.init(self.auth);
       LoadingService.loading();
 
-      drv.update(settingData)
-      .$promise.then(function (data) {
-        /* 補充先前的延遲上傳資料 */
-        LazyService.run();
+      /* 補充先前的延遲上傳資料 */
+      LazyService.run();
 
-        q.resolve(data);
+      drv.update(settingData)
+      .$promise.then(function (resp) {
+        q.resolve(resp);
       }, function (err) {
         if (+err.status === 0) {
           /* 網路發生問題，啟動延遲上傳機制 */
-          MtargetsService.lazy('update', auth, settingData);
+          MtargetsService.lazy('update', self.auth, settingData);
 
           $timeout(function () {
             LoadingService.done();
@@ -347,19 +344,19 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       var settingData = {
         id: tid
       };
-      var drv = MtargetsService.init(auth);
+      var drv = MtargetsService.init(self.auth);
       LoadingService.loading();
+
+      /* 補充先前的延遲上傳資料 */
+      LazyService.run();
 
       drv.delete(settingData)
       .$promise.then(function (data) {
-        /* 補充先前的延遲上傳資料 */
-        LazyService.run();
-
         q.resolve(data);
       }, function (err) {
         if (+err.status === 0) {
           /* 網路發生問題，啟動延遲上傳機制 */
-          MtargetsService.lazy('delete', auth, settingData);
+          MtargetsService.lazy('delete', self.auth, settingData);
 
           $timeout(function () {
             LoadingService.done();
@@ -379,17 +376,19 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         tid: action.tid
       };
 
-      var drv = ActionsService.init(auth);
+      var drv = ActionsService.init(self.auth);
+      LoadingService.loading();
+
+      /* 補充先前的延遲上傳資料 */
+      LazyService.run();
+
       drv.save(settingData)
       .$promise.then(function (data) {
-        /* 補充先前的延遲上傳資料 */
-        LazyService.run();
-
         q.resolve(data);
       }, function (err) {
         if (+err.status === 0) {
           /* 網路發生問題，啟動延遲上傳機制 */
-          ActionsService.lazy('save', auth, settingData);
+          ActionsService.lazy('save', self.auth, settingData);
 
           $timeout(function () {
             LoadingService.done();
@@ -404,6 +403,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       return q.promise;
     }
   };
+
+  return self;
 })
 
 
@@ -449,10 +450,9 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('NotifyService', function ($ionicPlatform, $timeout, $q, $log, $cordovaBadge, $cordovaLocalNotification, $ionicPopup) {
-  var reqPermissionCount = 0;
-  var maxReqPermissionCount = 3;
-
   var self = {
+    reqPermissionCount: 0,
+    maxReqPermissionCount: 3,
     cancel: function (tid) {
       if (!tid) {
         return;
@@ -499,8 +499,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
           });
 
         }, function () {
-          reqPermissionCount = reqPermissionCount + 1;
-          if (reqPermissionCount <= maxReqPermissionCount) {
+          self.reqPermissionCount = self.reqPermissionCount + 1;
+          if (self.reqPermissionCount <= self.maxReqPermissionCount) {
             $ionicPopup.alert({
               title: '需要開啟通知權限',
               template: '請開啟一領一禱告認領的通知權限（超過三次將不再提醒）'
@@ -680,10 +680,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('MtargetsService', function ($resource, $q, $log, ENV, base64, _, ConfigService, LazyService) {
-
-  var items = {};
-
   var self = {
+    items: {},
     init: function (token) {
       var auth = { Authorization: 'Basic ' + base64.encode(token.email + ':' + token.uuidx) };
       return $resource(ENV.apiEndpoint + 'targets/:id', {id: '@id'},
@@ -699,23 +697,23 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       LazyService.add('MtargetsService', method, auth, settingData);
     },
     all: function (token, func, errfunc) {
-      items = self.init(token).query(func, errfunc);
-      return items;
+      self.items = self.init(token).query(func, errfunc);
+      return self.items;
     },
     update: function (mtargets) {
       ConfigService.setMtarget(JSON.stringify(mtargets));
-      items = mtargets;
+      self.items = mtargets;
     },
     item: function (id) {
-      return _.filter(items, {id: id})[0];
+      return _.filter(self.items, {id: id})[0];
     },
     clean: function () {
-      items = {};
+      self.items = {};
       ConfigService.setMtarget(null);
     },
     remove: function (tid) {
-      items = _.reject(items, function(e) { return e.tid === tid; });
-      ConfigService.setMtarget(JSON.stringify(items));
+      self.items = _.reject(self.items, function(e) { return e.tid === tid; });
+      ConfigService.setMtarget(JSON.stringify(self.items));
     },
     merge: function (newList, oldList) {
 
@@ -743,11 +741,11 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         }
       });
 
-      items = tmpList;
+      self.items = tmpList;
 
-      ConfigService.setMtarget(JSON.stringify(items));
+      ConfigService.setMtarget(JSON.stringify(self.items));
 
-      return items;
+      return self.items;
     }
   };
 
@@ -773,22 +771,24 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 
 
 .factory('LazyService', function ($injector) {
-  var opts = [];
-  return {
+  var self = {
+    opts: [],
     run: function () {
-      angular.forEach(opts, function (opt, i) {
+      angular.forEach(self.opts, function (opt) {
         var Service = $injector.get(opt.Service);
         var drv = Service.init(opt.auth);
         drv[opt.method](opt.settingData)
         .$promise.then(function () {
-          opts.splice(i, 1);
+          self.opts.splice(self.opts.indexOf(opt), 1);
         });
       });
     },
     add: function (Service, method, auth, settingData) {
-      opts.push({Service: Service, method: method, auth: auth, settingData: settingData});
+      self.opts.push({Service: Service, method: method, auth: auth, settingData: settingData});
     }
   };
+
+  return self;
 })
 
 

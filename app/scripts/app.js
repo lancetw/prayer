@@ -9,7 +9,7 @@
 angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Prayer.controllers', 'LocalStorageModule', 'angularMoment'])
 
 
-.run(function ($rootScope, $ionicPlatform, $log, $cordovaStatusbar, $cordovaNetwork, KeyboardService, NotifyService, amMoment, LazyService) {
+.run(function ($rootScope, $ionicPlatform, $log, $cordovaStatusbar, $cordovaNetwork, KeyboardService, NotifyService, LazyService, amMoment) {
   $ionicPlatform.ready(function () {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -29,18 +29,17 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     $ionicPlatform.registerBackButtonAction(function (event) {
       event.preventDefault();
     }, 100);
-
-
-    $rootScope.$on('$cordovaNetwork:online', function () {
-      LazyService.run();
-      $rootScope.checkOfflineMode(false);
-    });
-
-    $rootScope.$on('$cordovaNetwork:offline', function () {
-      $rootScope.checkOfflineMode(true);
-    });
-
   });
+
+  $rootScope.$on('$cordovaNetwork:online', function () {
+    $rootScope.checkOfflineMode(false);
+    LazyService.run();
+  });
+
+  $rootScope.$on('$cordovaNetwork:offline', function () {
+    $rootScope.checkOfflineMode(true);
+  });
+
 })
 
 // base64: http://jasonwatmore.com/post/2014/05/26/AngularJS-Basic-HTTP-Authentication-Example.aspx
