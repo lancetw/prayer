@@ -737,22 +737,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
   };
 
-  $rootScope.checkOfflineMode = function (status) {
-    if ($rootScope.offlineMode === undefined) {
-      $rootScope.offlineMode = false;
-    }
-
-    if (status !== undefined) {
-      $rootScope.offlineMode = status;
-    } else {
-      UserAction.checkOnline().then(function () {
-        $rootScope.offlineMode = false;
-      }, function () {
-        $rootScope.offlineMode = true;
-      });
-    }
-  };
-
   $scope.doRefresh = function () {
     var q = $q.defer();
 

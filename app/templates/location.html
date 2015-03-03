@@ -3,19 +3,19 @@
   <ion-content class="padding-bottom bg-dark" padding="true">
 
     <div class="list padding-top">
-      <button class="button button-full button-assertive" ng-click="rerun()">
+      <button ng-disabled="(!!offlineMode)" class="button button-full button-assertive" ng-click="rerun()">
       重新取得 GPS 資訊
       </button>
-      <button class="button button-full button-dark" ng-click="toAddress()">
+      <button ng-disabled="(!!offlineMode)" class="button button-full button-dark" ng-click="toAddress()">
       使用所在地找尋我的教會
       </button>
-      <button class="button button-full button-dark" ng-click="toKeyword()">
+      <button ng-disabled="(!!offlineMode)" class="button button-full button-dark" ng-click="toKeyword()">
       使用關鍵字找尋我的教會
       </button>
     </div>
 
     <div class="list" ng-model="showLoginIsNeeded" ng-if="showLoginIsNeeded">
-      <button ng-click="toMain()" class="button button-full button-dark">我已經是守望者</button>
+      <button ng-disabled="(!!offlineMode)" ng-click="toMain()" class="button button-full button-dark">我已經是守望者</button>
     </div>
 
   </ion-content>

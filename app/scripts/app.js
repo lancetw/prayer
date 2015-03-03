@@ -9,7 +9,7 @@
 angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Prayer.controllers', 'LocalStorageModule', 'angularMoment'])
 
 
-.run(function ($rootScope, $ionicPlatform, $log, $cordovaStatusbar, $cordovaNetwork, KeyboardService, NotifyService, LazyService, amMoment) {
+.run(function ($rootScope, $ionicPlatform, $log, $cordovaStatusbar, $cordovaNetwork, KeyboardService, NotifyService, LazyService, UserAction, amMoment) {
   $ionicPlatform.ready(function () {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -31,6 +31,23 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
     }, 100);
   });
 
+
+  $rootScope.checkOfflineMode = function (status) {
+    if ($rootScope.offlineMode === undefined) {
+      $rootScope.offlineMode = false;
+    }
+
+    if (status !== undefined) {
+      $rootScope.offlineMode = status;
+    } else {
+      UserAction.checkOnline().then(function () {
+        $rootScope.offlineMode = false;
+      }, function () {
+        $rootScope.offlineMode = true;
+      });
+    }
+  };
+
   $rootScope.$on('$cordovaNetwork:online', function () {
     $rootScope.checkOfflineMode(false);
     LazyService.run();
@@ -39,6 +56,8 @@ angular.module('Prayer', ['ngCordova', 'ionic', 'config', 'Prayer.services', 'Pr
   $rootScope.$on('$cordovaNetwork:offline', function () {
     $rootScope.checkOfflineMode(true);
   });
+
+
 
 })
 

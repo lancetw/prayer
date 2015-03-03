@@ -25,7 +25,7 @@
         我同意使用者條款
       </ion-checkbox>-->
 
-      <button ng-disabled="!(!!user.email)" ng-click="register()" class="button button-positive button-block">開始使用</button>
+      <button ng-disabled="(!!offlineMode) || !(!!user.email)" ng-click="register()" class="button button-positive button-block">開始使用</button>
 
       <button ng-click="toIntro()" class="button button-light button-block">取消</button>
     </div>

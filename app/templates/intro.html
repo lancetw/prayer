@@ -1,6 +1,6 @@
 <ion-view cache-view="false" hide-back-button="true" title="" class="bg-dark">
   <ion-nav-buttons side="left">
-    <button class="button button-white button-clear no-animation"
+    <button ng-disabled="(!!offlineMode)" class="button button-white button-clear no-animation"
       ng-click="startApp()" ng-if="!slideIndex">
       略過教學
     </button>
@@ -31,7 +31,7 @@
         有任何問題請聯絡 lancetw@gmail.com
       </p>
 
-      <button style="position: absolute; bottom: 50px;" ng-click="toMain()" class="button button-full button-dark">我已經是守望者</button>
+      <button ng-disabled="(!!offlineMode)" style="position: absolute; bottom: 50px;" ng-click="toMain()" class="button button-full button-dark">我已經是守望者</button>
     </ion-slide>
 
     <ion-slide>
@@ -44,7 +44,7 @@
         <ion-item class="item-clear highlight">輸入 Email</ion-item>
         <ion-item class="item-clear highlight">點擊您的代禱對象</ion-item>
       </ion-list>
-      <button style="position: absolute; bottom: 50px;" class="button button-full button-dark" ng-click="startApp()">按此開始使用</button>
+      <button ng-disabled="(!!offlineMode)" style="position: absolute; bottom: 50px;" class="button button-full button-dark" ng-click="startApp()">按此開始使用</button>
     </ion-slide>
   </ion-slide-box>
 

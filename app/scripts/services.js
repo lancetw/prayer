@@ -168,7 +168,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
 })
 
 
-.factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService, ConfigService) {
+.factory('UserAction', function ($ionicPlatform, $q, $timeout, LoadingService, UsersService, UserCheckService, SettingsService, ChurchesService, MtargetsService, ActionsService, LazyService) {
   var self = {
     auth: {},
     setAuth: function (auth_) {
@@ -183,7 +183,7 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
         return q.resolve(data);
       }, function (err) {
         if (+err.status === 403) {
-          LoadingService.error('已經有此使用者，但無法在此裝置上使用。');
+          LoadingService.error('此使用者已經在特定的裝置上使用，請使用其他的 Email。');
         } else {
           LoadingService.error('發生錯誤，錯誤碼為 ' + err.status);
         }
@@ -216,7 +216,12 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
     },
     checkOnline: function () {
       var q = $q.defer();
-      var auth = ConfigService.getAuth();
+
+      var auth = {
+        email: 'ilancetw@icloud.com',
+        uuidx: 'TRACKONLY'
+      };
+
       UserCheckService.alive(auth, function (data) {
         q.resolve(data);
       }, function (err) {
