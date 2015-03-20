@@ -716,7 +716,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
 
       if ($stateParams && $stateParams.action === 'forceReload') {
         $stateParams.action = '';
-        $scope.doRefresh();
+        $rootScope.doRefresh();
       }
 
       $scope.checkEmptyTips();
@@ -737,7 +737,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     }
   };
 
-  $scope.doRefresh = function () {
+  $rootScope.doRefresh = function () {
     var q = $q.defer();
 
     $scope.menuIsActive = false;
@@ -767,7 +767,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     confirmPopup.then(function(res) {
       if(res) {
         LoadingService.loading();
-        $scope.doRefresh().then(function () {
+        $rootScope.doRefresh().then(function () {
           LoadingService.done();
           $state.go('location', {action: 'changeChurch'}, {cache: false, reload: true});
         }, function (err) {
@@ -1104,13 +1104,21 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     .then(function () {
       $rootScope.checkOfflineMode(false);
       $timeout(function () {
-        $ionicHistory.goBack();
+        $rootScope.doRefresh().then(function () {
+          $ionicHistory.goBack();
+        }, function () {
+          $ionicHistory.goBack();
+        });
       }, 1000);
     }, function (err) {
       if (+err.status === 0) {
         $rootScope.checkOfflineMode(true);
         $timeout(function () {
-          $ionicHistory.goBack();
+          $rootScope.doRefresh().then(function () {
+            $ionicHistory.goBack();
+          }, function () {
+            $ionicHistory.goBack();
+          });
         }, 1000);
       } else if (+err.status === 403) {
         LoadingService.msg('名稱不能空白');
