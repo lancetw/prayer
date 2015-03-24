@@ -13,7 +13,7 @@
 
       <a event-focus="click" event-focus-id="inputMtargetName" class="item-enter item item-icon-left" ng-click="toogleMtargetNameBox()" ng-model="mtargetNameIsModified" ng-if="!mtargetNameIsModified">
         <i class="icon ion-person-add"></i>
-        <span>{{ mtarget.name }}</span>
+        <span>{{mtarget.name}}</span>
       </a>
 
       <div ng-model="mtargetNameIsModified" ng-if="mtargetNameIsModified" class="item-enter item item-icon-left">
@@ -23,7 +23,7 @@
 
       <a href="#" class="item item-icon-left" ng-click="updateMtargetFreq()">
         <i class="icon ion-ios7-clock"></i>
-        <span ng-if="mtarget.freq > 0">代禱頻率：{{ mtarget.freqName }} </span>
+        <span ng-if="mtarget.freq > 0">代禱頻率：{{mtarget.freqName}} </span>
         <span ng-if="!mtarget.freq || mtarget.freq === 0">代禱頻率未設定</span>
       </a>
 

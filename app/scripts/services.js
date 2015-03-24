@@ -709,8 +709,8 @@ angular.module('Prayer.services', ['ngResource', 'ab-base64', 'underscore', 'ang
       ConfigService.setMtarget(JSON.stringify(mtargets));
       self.items = mtargets;
     },
-    item: function (id) {
-      return _.filter(self.items, {id: id})[0];
+    item: function (tid) {
+      return _.find(self.items, function(e) { return e.id === tid; });
     },
     clean: function () {
       self.items = {};

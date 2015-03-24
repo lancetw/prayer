@@ -971,6 +971,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
               if (typeof item.past === 'undefined') { item.past = 0; }
               if (typeof item.keep === 'undefined') { item.keep = 0; }
 
+              item.id = parseInt(item.id);
               item.sinner = +item.sinner;
               item.baptized = +item.baptized;
               item.meeter = +item.meeter;
@@ -988,6 +989,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         } else {
           MtargetsService.update($scope.mtargets);
           angular.forEach($scope.mtargets, function(item, index) {
+            item.id = parseInt(item.id);
             item.sinner = +item.sinner;
             item.baptized = +item.baptized;
             item.meeter = +item.meeter;
@@ -1013,6 +1015,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
         if (typeof item.past === 'undefined') { item.past = 0; }
         if (typeof item.keep === 'undefined') { item.keep = 0; }
 
+        item.id = parseInt(item.id);
         item.sinner = +item.sinner;
         item.baptized = +item.baptized;
         item.meeter = +item.meeter;
@@ -1085,7 +1088,7 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
     var q = $q.defer();
     try {
       $scope.auth = ConfigService.getAuth();
-      $scope.mtarget = MtargetsService.item($stateParams.mtargetId);
+      $scope.mtarget = MtargetsService.item(parseInt($stateParams.mtargetId));
       $scope.mtarget.freqName = FreqService.getFreqName($scope.mtarget.freq);
 
       q.resolve($scope.mtarget);
