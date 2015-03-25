@@ -1205,16 +1205,19 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 
   $scope.regionSubmit = function () {
+    $scope.twzipcode = {};
     $scope.twzipcode.city = '';
     $scope.twzipcode.region = ($scope.invert($scope.twzipcode.citySel))[$scope.twzipcode.regionSel];
 
     $scope.each($scope.twZipCodeData, function (_dt, city) {
-      var c = city;
-      $scope.each(_dt, function (_zipcode) {
-        if (_zipcode === $scope.twzipcode.regionSel) {
-          $scope.twzipcode.city = c;
-        }
-      });
+      if (city) {
+        var c = city;
+        $scope.each(_dt, function (_zipcode) {
+          if (_zipcode === $scope.twzipcode.regionSel) {
+            $scope.twzipcode.city = c;
+          }
+        });
+      }
     });
 
     if ($scope.twzipcode.city && $scope.twzipcode.region) {
