@@ -1205,7 +1205,6 @@ angular.module('Prayer.controllers', ['angular-underscore', 'angularMoment'])
   });
 
   $scope.regionSubmit = function () {
-    $scope.twzipcode = {};
     $scope.twzipcode.city = '';
     $scope.twzipcode.region = ($scope.invert($scope.twzipcode.citySel))[$scope.twzipcode.regionSel];
 
